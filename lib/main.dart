@@ -1,3 +1,4 @@
+import 'package:dilalquran/modules/presentations/screens/app_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(const MainApp());
@@ -7,7 +8,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return const AppScreen();
   }
 }
 
