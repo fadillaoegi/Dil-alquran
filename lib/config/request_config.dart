@@ -44,6 +44,17 @@ class AppRequest {
       if (resHttpPost.statusCode == 200) {
         Map? resPostToMap = jsonDecode(resHttpPost.body);
         return resPostToMap;
+      } else if (resHttpPost.statusCode == 400) {
+        DMethod.printTitle("Try ~ $url : data tidak ditemukan",
+            resHttpPost.statusCode.toString());
+        print("status code: ${resHttpPost.statusCode}");
+        return null;
+      } else if (resHttpPost.statusCode == 500) {
+        DMethod.printTitle(
+            "Try ~ $url : Terjadi kesalahan internal pada server",
+            resHttpPost.statusCode.toString());
+        print("status code: ${resHttpPost.statusCode}");
+        return null;
       }
     } catch (error) {
       DMethod.printTitle("Catch From AppRequest ~ ", error.toString());
