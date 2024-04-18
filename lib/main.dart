@@ -11,4 +11,3 @@ class MainApp extends StatelessWidget {
     return const AppScreen();
   }
 }
-
