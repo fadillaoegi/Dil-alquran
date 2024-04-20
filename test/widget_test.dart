@@ -10,9 +10,17 @@
 
 // import 'package:dilalquran/main.dart';
 
-void main() {
+import 'package:dilalquran/modules/data/models/surah_model.dart';
+import 'package:dilalquran/modules/data/sources/home_source.dart';
+
+void main() async {
   // print("runTest");
 
+  print(HomeSource.fetchSurah());
+
+  List<Surah> surah = await HomeSource.fetchSurah();
+
+  print("daftar Surah: $surah");
   // testWidgets('Counter increments smoke test', (WidgetTester tester) async {
   //   // Build our app and trigger a frame.
   //   await tester.pumpWidget(const MainApp());
