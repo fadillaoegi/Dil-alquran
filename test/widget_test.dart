@@ -20,5 +20,5 @@ void main() async {
 
   List<Surah> surah = await HomeSource.fetchSurah();
 
-  print("daftar Surah: ${surah.length}");
+  // Surah surahh =
 }
