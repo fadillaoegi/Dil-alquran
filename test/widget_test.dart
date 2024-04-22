@@ -10,6 +10,8 @@
 
 // import 'package:dilalquran/main.dart';
 
+// ignore_for_file: avoid_print
+
 import 'package:dilalquran/modules/data/models/surah_model.dart';
 import 'package:dilalquran/modules/data/sources/home_source.dart';
 

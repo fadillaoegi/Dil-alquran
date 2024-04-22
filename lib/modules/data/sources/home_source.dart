@@ -14,10 +14,9 @@ class HomeSource {
 
       if (resFetchSurah == null) return [];
 
-      if (resFetchSurah["status"] == "OK") {
+      if (resFetchSurah["status"] == "OK.") {
         List resToList = resFetchSurah["data"] ?? [];
         // print(resToList);
-
         final listToModel = resToList.map((e) => Surah.fromJson(e)).toList();
         print(listToModel);
 
