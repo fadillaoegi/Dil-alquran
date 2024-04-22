@@ -1,6 +1,7 @@
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,9 +19,13 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              "HOME SCREEN",
-              style: white400.copyWith(fontSize: 20.0),
+              "Dil ~ AlQuran",
+              style: dancing700.copyWith(fontSize: 40.0),
             ),
+            SizedBox(
+                height: 350.0,
+                width: 350.0,
+                child: Lottie.asset("assets/lotties/animationReadQuran.json")),
           ],
         ),
       ),
