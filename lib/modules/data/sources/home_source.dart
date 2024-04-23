@@ -1,5 +1,4 @@
 // ignore_for_file: avoid_print
-
 import 'package:dilalquran/config/api_config.dart';
 import 'package:dilalquran/config/request_config.dart';
 import 'package:dilalquran/modules/data/models/surah_detail_model.dart';

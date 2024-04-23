@@ -1,7 +1,5 @@
 import 'package:dilalquran/themes/colors.dart';
-import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,14 +16,11 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              "Dil ~ AlQuran",
-              style: dancing700.copyWith(fontSize: 40.0),
+            ListView.builder(
+              itemBuilder: (context, index) {
+                return const ListTile();
+              },
             ),
-            SizedBox(
-                height: 350.0,
-                width: 350.0,
-                child: Lottie.asset("assets/lotties/animationReadQuran.json")),
           ],
         ),
       ),
