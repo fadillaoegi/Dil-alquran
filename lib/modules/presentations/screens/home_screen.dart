@@ -1,6 +1,8 @@
+import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -8,7 +10,16 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        shape: Border.all(
+          color: Colors.white,
+        ),
+        backgroundColor: ColorApp.primary,
+        title: Text(
+          "Al~Quran",
+          style: white700,
+        ),
+      ),
       body: Container(
         height: MediaQuery.sizeOf(context).height,
         width: MediaQuery.sizeOf(context).width,
@@ -19,23 +30,25 @@ class HomeScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             int i = index++;
             return ListTile(
-              onTap: () {},
+              onTap: () {
+                Get.toNamed(RouteScreen.detailSurah);
+              },
               leading: CircleAvatar(
                 child: Center(
                   child: Text("${i + 1}"),
                 ),
               ),
               title: Text(
-                "TiTle",
-                style: white400,
+                "Surah ke-${i + 1}",
+                style: white500.copyWith(fontSize: 14.0),
               ),
               subtitle: Text(
-                "Subtitle",
-                style: white400,
+                "Subtitle ke-${i + 1}",
+                style: white400.copyWith(fontSize: 12.0),
               ),
               trailing: Text(
-                "Trailing",
-                style: white400,
+                "Trailing ke-${i + 1}",
+                style: white400.copyWith(fontSize: 12.0),
               ),
             );
           },
