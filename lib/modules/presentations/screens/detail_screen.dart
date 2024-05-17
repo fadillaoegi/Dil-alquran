@@ -10,6 +10,9 @@ class DetailSurahScreen extends StatelessWidget {
         height: MediaQuery.sizeOf(context).height,
         width: MediaQuery.sizeOf(context).width,
         decoration: const BoxDecoration(),
+        child: const Column(
+          children: [Text("data")],
+        ),
       ),
     );
   }

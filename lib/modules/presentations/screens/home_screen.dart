@@ -1,6 +1,7 @@
 import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
+import 'package:dilalquran/widgets/list_surahayat_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -17,7 +18,8 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: ColorApp.primary,
         title: Text(
           "Al~Quran",
-          style: white700,
+          textAlign: TextAlign.center,
+          style: dancing700.copyWith(fontSize: 36.0),
         ),
       ),
       body: Container(
@@ -29,27 +31,11 @@ class HomeScreen extends StatelessWidget {
           itemCount: 10,
           itemBuilder: (context, index) {
             int i = index++;
-            return ListTile(
+            return ListSurahAyat(
+              i: i,
               onTap: () {
                 Get.toNamed(RouteScreen.detailSurah);
               },
-              leading: CircleAvatar(
-                child: Center(
-                  child: Text("${i + 1}"),
-                ),
-              ),
-              title: Text(
-                "Surah ke-${i + 1}",
-                style: white500.copyWith(fontSize: 14.0),
-              ),
-              subtitle: Text(
-                "Subtitle ke-${i + 1}",
-                style: white400.copyWith(fontSize: 12.0),
-              ),
-              trailing: Text(
-                "Trailing ke-${i + 1}",
-                style: white400.copyWith(fontSize: 12.0),
-              ),
             );
           },
         ),
