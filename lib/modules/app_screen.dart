@@ -9,7 +9,8 @@ class AppScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      initialRoute: RouteScreen.home,
+      initialRoute: RouteScreen.splash,
+      debugShowCheckedModeBanner: false,
       getPages: getPages,
     );
   }

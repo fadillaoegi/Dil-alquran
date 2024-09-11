@@ -1,6 +1,9 @@
+import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:lottie/lottie.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -32,7 +35,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 350.0,
                 child: Lottie.asset("assets/lotties/animationReadQuran.json")),
             ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Get.offAndToNamed(RouteScreen.home);
+                },
                 child: Text(
                   "Baca Al-Quran",
                   style: black400.copyWith(fontSize: 14.0),

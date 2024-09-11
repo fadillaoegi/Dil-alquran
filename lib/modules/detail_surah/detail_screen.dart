@@ -1,4 +1,4 @@
-import 'package:dilalquran/modules/presentations/controllers/detail_controller.dart';
+import 'package:dilalquran/modules/detail_surah/detail_controller.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

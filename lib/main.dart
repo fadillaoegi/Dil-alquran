@@ -1,4 +1,4 @@
-import 'package:dilalquran/modules/presentations/screens/app_screen.dart';
+import 'package:dilalquran/modules/app_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(const MainApp());

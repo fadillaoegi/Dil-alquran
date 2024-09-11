@@ -1,6 +1,6 @@
-import 'package:dilalquran/modules/presentations/screens/detail_screen.dart';
-import 'package:dilalquran/modules/presentations/screens/home_screen.dart';
-import 'package:dilalquran/modules/presentations/screens/splash_screen.dart';
+import 'package:dilalquran/modules/detail_surah/detail_screen.dart';
+import 'package:dilalquran/modules/home/screen/home_screen.dart';
+import 'package:dilalquran/modules/splash/splash_screen.dart';
 import 'package:dilalquran/routes/route.dart';
 import 'package:get/get.dart';
 

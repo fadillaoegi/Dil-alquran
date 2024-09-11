@@ -1,4 +1,4 @@
-import 'package:dilalquran/modules/presentations/controllers/home_controller.dart';
+import 'package:dilalquran/modules/home/controller/home_controller.dart';
 import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
