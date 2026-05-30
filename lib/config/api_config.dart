@@ -1,4 +1,5 @@
 class ApiConfig {
-  static const baseUrl = "https://api.quran.gading.dev";
-  static const surah = "$baseUrl/surah";
+  static const baseUrl = "https://equran.id/api/v2";
+  static const surah = "$baseUrl/surat";
+  static const tafsir = "$baseUrl/tafsir";
 }

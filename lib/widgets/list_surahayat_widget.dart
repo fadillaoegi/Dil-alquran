@@ -1,3 +1,4 @@
+import 'package:dilalquran/modules/data/models/juz_model.dart';
 import 'package:dilalquran/modules/data/models/surah_model.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
@@ -16,11 +17,11 @@ class ListSurahAyat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final transliteration = surah.name?.transliteration?.id ?? "";
-    final translation = surah.name?.translation?.id ?? "";
-    final arabicName = surah.name?.short ?? "";
-    final versesCount = surah.numberOfVerses ?? 0;
-    final revelation = surah.revelation?.id ?? "Makkah";
+    final nameLatin = surah.namaLatin ?? "";
+    final meaning = surah.arti ?? "";
+    final arabicName = surah.nama ?? "";
+    final versesCount = surah.jumlahAyat ?? 0;
+    final revelation = surah.tempatTurun ?? "Mekah";
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -50,7 +51,6 @@ class ListSurahAyat extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                // Custom Islamic-style Surah Number Badge
                 Container(
                   width: 44,
                   height: 44,
@@ -64,7 +64,7 @@ class ListSurahAyat extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      "${surah.number}",
+                      "${surah.nomor}",
                       style: GoogleFonts.roboto(
                         color: ColorApp.primary,
                         fontWeight: FontWeight.bold,
@@ -74,14 +74,12 @@ class ListSurahAyat extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16.0),
-
-                // Surah Name (English/Indonesian Transliteration & Details)
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        transliteration,
+                        nameLatin,
                         style: black700.copyWith(fontSize: 15.0),
                       ),
                       const SizedBox(height: 4.0),
@@ -89,7 +87,7 @@ class ListSurahAyat extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              translation,
+                              meaning,
                               style: black400.copyWith(
                                 fontSize: 11.5,
                                 color: ColorApp.black.withValues(alpha: 0.6),
@@ -119,8 +117,6 @@ class ListSurahAyat extends StatelessWidget {
                     ],
                   ),
                 ),
-
-                // Arabic Script & Revelation Type Badge
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -153,6 +149,100 @@ class ListSurahAyat extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ListJuzCard extends StatelessWidget {
+  const ListJuzCard({
+    super.key,
+    required this.juz,
+    required this.onTap,
+  });
+
+  final JuzSummary juz;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            ColorApp.primary,
+            ColorApp.primary.withValues(alpha: 0.85),
+            ColorApp.black,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18.0),
+        boxShadow: [
+          BoxShadow(
+            color: ColorApp.primary.withValues(alpha: 0.2),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18.0),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: ColorApp.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14.0),
+                    border: Border.all(
+                      color: ColorApp.white.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "${juz.number}",
+                      style: white700.copyWith(fontSize: 18.0),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Juz ${juz.number}",
+                        style: white700.copyWith(fontSize: 16.0),
+                      ),
+                      const SizedBox(height: 3.0),
+                      Text(
+                        "${juz.startSurahName} - ${juz.endSurahName}",
+                        style: white500.copyWith(
+                          fontSize: 12.0,
+                          color: ColorApp.white.withValues(alpha: 0.85),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  "${juz.totalAyat} ayat",
+                  style: white600.copyWith(fontSize: 11.0),
                 ),
               ],
             ),
