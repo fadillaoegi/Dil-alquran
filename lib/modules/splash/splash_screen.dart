@@ -4,7 +4,6 @@ import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -22,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
         height: MediaQuery.sizeOf(context).height,
         width: MediaQuery.sizeOf(context).width,
         margin: const EdgeInsets.all(0.0),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -53,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 10),
             Text(
               "Kitab Suci Al-Quran Digital",
-              style: GoogleFonts.roboto(
+              style: TextStyle(
                 color: ColorApp.white.withValues(alpha: 0.8),
                 fontSize: 14.0,
                 letterSpacing: 2.0,
@@ -74,14 +73,14 @@ class _SplashScreenState extends State<SplashScreen> {
               onPressed: () {
                 Get.offAndToNamed(RouteScreen.home);
               },
-              icon: Icon(
+              icon: const Icon(
                 Icons.menu_book_rounded,
                 color: ColorApp.primary,
                 size: 22,
               ),
-              label: Text(
+              label: const Text(
                 "Mulai Membaca",
-                style: GoogleFonts.roboto(
+                style: TextStyle(
                   color: ColorApp.primary,
                   fontWeight: FontWeight.w700,
                   fontSize: 16.0,

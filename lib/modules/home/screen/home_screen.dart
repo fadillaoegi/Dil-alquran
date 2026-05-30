@@ -5,7 +5,6 @@ import 'package:dilalquran/themes/fonts.dart';
 import 'package:dilalquran/widgets/list_surahayat_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -41,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.info_outline_rounded, color: ColorApp.white),
+            icon: const Icon(Icons.info_outline_rounded, color: ColorApp.white),
             onPressed: () {
               Get.defaultDialog(
                 title: "Tentang Aplikasi",
@@ -59,9 +58,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     "Tutup",
-                    style: GoogleFonts.roboto(color: ColorApp.white),
+                    style: TextStyle(color: ColorApp.white),
                   ),
                 ),
               );
@@ -75,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(
+                const CircularProgressIndicator(
                   color: ColorApp.primary,
                   strokeWidth: 4,
                 ),
@@ -101,11 +100,11 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
               padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [
-                    const Color(0xff0d4e34),
+                    Color(0xff0d4e34),
                     ColorApp.primary,
-                    const Color(0xff8ccf72),
+                    Color(0xff8ccf72),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -148,9 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
+                  const Text(
                     "Assalamualaikum",
-                    style: GoogleFonts.amiri(
+                    style: TextStyle(
                       color: ColorApp.white,
                       fontSize: 26.0,
                       fontWeight: FontWeight.bold,
@@ -161,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     isSurah
                         ? "Cari surah dan baca ayat lengkap dengan audio."
                         : "Telusuri 30 juz dengan navigasi ayat yang rapi.",
-                    style: GoogleFonts.roboto(
+                    style: TextStyle(
                       color: ColorApp.white.withValues(alpha: 0.9),
                       fontSize: 13.0,
                       fontWeight: FontWeight.w300,
@@ -209,10 +208,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 13.5,
                   ),
                   prefixIcon:
-                      Icon(Icons.search_rounded, color: ColorApp.primary),
+                      const Icon(Icons.search_rounded, color: ColorApp.primary),
                   suffixIcon: controller.searchQ.value.isNotEmpty
                       ? IconButton(
-                          icon: Icon(Icons.clear_rounded,
+                          icon: const Icon(Icons.clear_rounded,
                               color: ColorApp.primary),
                           onPressed: () {
                             searchTextController.clear();
@@ -229,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30.0),
-                    borderSide: BorderSide(color: ColorApp.primary, width: 1.5),
+                    borderSide: const BorderSide(color: ColorApp.primary, width: 1.5),
                   ),
                 ),
               ),
@@ -344,7 +343,7 @@ class _CategoryChip extends StatelessWidget {
               const SizedBox(width: 8.0),
               Text(
                 label,
-                style: GoogleFonts.roboto(
+                style: TextStyle(
                   color: selected ? ColorApp.white : ColorApp.primary,
                   fontWeight: FontWeight.w700,
                 ),

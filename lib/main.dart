@@ -1,7 +1,10 @@
 import 'package:dilalquran/modules/app_screen.dart';
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MainApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MainApp());
+}
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});

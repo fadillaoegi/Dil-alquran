@@ -3,7 +3,6 @@ import 'package:dilalquran/modules/data/models/surah_model.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ListSurahAyat extends StatelessWidget {
   const ListSurahAyat({
@@ -65,7 +64,7 @@ class ListSurahAyat extends StatelessWidget {
                   child: Center(
                     child: Text(
                       "${surah.nomor}",
-                      style: GoogleFonts.roboto(
+                      style: const TextStyle(
                         color: ColorApp.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 14.0,
@@ -122,7 +121,7 @@ class ListSurahAyat extends StatelessWidget {
                   children: [
                     Text(
                       arabicName,
-                      style: GoogleFonts.amiri(
+                      style: const TextStyle(
                         color: ColorApp.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 22.0,
@@ -140,7 +139,7 @@ class ListSurahAyat extends StatelessWidget {
                       ),
                       child: Text(
                         revelation,
-                        style: GoogleFonts.roboto(
+                        style: const TextStyle(
                           color: ColorApp.primary,
                           fontSize: 9.0,
                           fontWeight: FontWeight.w800,

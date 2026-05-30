@@ -6,7 +6,6 @@ import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class DetailSurahScreen extends StatefulWidget {
@@ -70,7 +69,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
             style: white700.copyWith(fontSize: 18.0),
           );
         }),
-        iconTheme: IconThemeData(color: ColorApp.white),
+        iconTheme: const IconThemeData(color: ColorApp.white),
       ),
       body: Obx(() {
         if (controller.isLoading) {
@@ -78,7 +77,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(
+                const CircularProgressIndicator(
                   color: ColorApp.primary,
                   strokeWidth: 4,
                 ),
@@ -298,7 +297,7 @@ class _QariToolbar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.record_voice_over_rounded,
+          const Icon(Icons.record_voice_over_rounded,
               color: ColorApp.primary, size: 20),
           const SizedBox(width: 8.0),
           Text(
@@ -313,7 +312,7 @@ class _QariToolbar extends StatelessWidget {
                   isExpanded: true,
                   value: controller.selectedQari,
                   style: black600.copyWith(fontSize: 12.0),
-                  icon: Icon(Icons.keyboard_arrow_down, color: ColorApp.primary),
+                  icon: const Icon(Icons.keyboard_arrow_down, color: ColorApp.primary),
                   items: controller.qariOptions
                       .map(
                         (option) => DropdownMenuItem<String>(
@@ -367,7 +366,7 @@ class _LastReadBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.bookmark_rounded, color: ColorApp.primary, size: 20),
+          const Icon(Icons.bookmark_rounded, color: ColorApp.primary, size: 20),
           const SizedBox(width: 10.0),
           Expanded(
             child: Text(
@@ -406,8 +405,8 @@ class _SurahHeaderCard extends StatelessWidget {
       margin: const EdgeInsets.all(16.0),
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [ColorApp.primary, const Color(0xff143a2a)],
+        gradient: const LinearGradient(
+          colors: [ColorApp.primary, Color(0xff143a2a)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -428,7 +427,7 @@ class _SurahHeaderCard extends StatelessWidget {
           const SizedBox(height: 10.0),
           Text(
             arabicName,
-            style: GoogleFonts.amiri(
+            style: const TextStyle(
               color: ColorApp.white,
               fontWeight: FontWeight.bold,
               fontSize: 34.0,
@@ -472,11 +471,11 @@ class _JuzHeaderCard extends StatelessWidget {
       margin: const EdgeInsets.all(16.0),
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            const Color(0xff0c3f2a),
+            Color(0xff0c3f2a),
             ColorApp.primary,
-            const Color(0xff102b22)
+            Color(0xff102b22)
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -599,7 +598,7 @@ class _AyatCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               arabText,
-              style: GoogleFonts.amiri(
+              style: const TextStyle(
                 color: ColorApp.black,
                 height: 2.0,
                 fontSize: 24.0,
@@ -613,7 +612,7 @@ class _AyatCard extends StatelessWidget {
             const SizedBox(height: 10.0),
             Text(
               latinText,
-              style: GoogleFonts.roboto(
+              style: TextStyle(
                 color: ColorApp.primary.withValues(alpha: 0.85),
                 fontSize: 12.5,
                 fontStyle: FontStyle.italic,
@@ -624,7 +623,7 @@ class _AyatCard extends StatelessWidget {
           const SizedBox(height: 10.0),
           Text(
             translationText,
-            style: GoogleFonts.roboto(
+            style: TextStyle(
               color: ColorApp.black.withValues(alpha: 0.8),
               fontSize: 13.5,
               height: 1.5,
