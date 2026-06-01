@@ -1,3 +1,4 @@
+import 'package:dilalquran/modules/audio/audio_controller.dart';
 import 'package:dilalquran/routes/list_get_pages.dart';
 import 'package:dilalquran/routes/route.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,9 @@ class AppScreen extends StatelessWidget {
       initialRoute: RouteScreen.splash,
       debugShowCheckedModeBanner: false,
       getPages: getPages,
+      initialBinding: BindingsBuilder(() {
+        Get.put(AudioController(), permanent: true);
+      }),
     );
   }
 }

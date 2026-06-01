@@ -16,6 +16,7 @@ class HomeController extends GetxController {
   bool get isLoading => _isLoading.value;
 
   final searchQ = "".obs;
+  final activeTab = 0.obs; // 0 for Surah, 1 for Juz
   final selectedCategory = QuranCategory.surah.obs;
 
   List<Surah> get filteredSurah {

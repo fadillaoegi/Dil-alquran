@@ -7,7 +7,6 @@ import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
 import 'package:dilalquran/modules/data/models/surah_model.dart';
 
 class HomeSource {
-  static final Map<int, SurahDetail> _surahDetailCache = {};
 
   static Future<List<Surah>> fetchSurah() async {
     try {
@@ -22,23 +21,39 @@ class HomeSource {
     }
   }
 
-  static Future<SurahDetail> fetchDetailSurah(int surahNumber) async {
+  static Future<SurahDetail> fetchDetailSurah(String surahNumber) async {
     try {
-      if (_surahDetailCache.containsKey(surahNumber)) {
-        return _surahDetailCache[surahNumber] ?? SurahDetail();
+      String url = "https://api.quran.gading.dev/surah/$surahNumber";
+
+      Map? resFetchSurahDetail = await AppRequest.gets(url);
+
+      if (resFetchSurahDetail == null) return SurahDetail();
+
+      if (resFetchSurahDetail["status"] == "OK") {
+        SurahDetail mapToModel =
+            SurahDetail.fromJson(resFetchSurahDetail["data"]);
+        return mapToModel;
+      } else {
+        return SurahDetail();
       }
-
-      final Map? response =
-          await AppRequest.gets("${ApiConfig.surah}/$surahNumber");
-      if (response == null || response["code"] != 200) return SurahDetail();
-
-      final detail = SurahDetail.fromJson(response["data"] ?? {});
-      _surahDetailCache[surahNumber] = detail;
-      return detail;
     } catch (error) {
-      print("Catch from Source fetchDetailSurah: $error");
+      print("Catch from Source: $error");
       return SurahDetail();
     }
+  }
+
+  static Future<Map?> fetchJuzDetail(String juzNumber) async {
+    try {
+      String url = "https://api.quran.gading.dev/juz/$juzNumber";
+      Map? res = await AppRequest.gets(url);
+      if (res == null) return null;
+      if (res["status"] == "OK") {
+        return res["data"];
+      }
+    } catch (error) {
+      print("Catch from Source fetchJuzDetail: $error");
+    }
+    return null;
   }
 
   static List<JuzSummary> buildJuzSummaries(List<Surah> surahList) {
@@ -90,7 +105,7 @@ class HomeSource {
     final List<JuzVerseItem> verses = [];
 
     final details = await Future.wait(
-      ranges.map((range) => fetchDetailSurah(range.surahNumber)),
+      ranges.map((range) => fetchDetailSurah(range.surahNumber.toString())),
     );
 
     for (var i = 0; i < ranges.length; i++) {

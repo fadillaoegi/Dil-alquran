@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dilalquran/modules/audio/audio_controller.dart';
 import 'package:dilalquran/modules/data/models/juz_model.dart';
 import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
 import 'package:dilalquran/modules/data/models/surah_model.dart';
@@ -45,6 +46,7 @@ class DetailSurahController extends GetxController {
   LastReadAyat? get lastRead => _lastRead.value;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioController audioCtrl = Get.find<AudioController>();
 
   SharedPreferences? _prefs;
 
@@ -61,7 +63,53 @@ class DetailSurahController extends GetxController {
   void onInit() {
     super.onInit();
     _listenAudioState();
+    _listenPlaylistState();
     _bootstrap();
+  }
+
+  void _listenPlaylistState() {
+    audioCtrl.currentPlayKey.listen((key) {
+      if (audioCtrl.isPlaylistActive(_category.value == QuranCategory.juz ? 'juz' : 'surah', _number.value)) {
+        if (key.isNotEmpty) {
+          _activeVerseKey.value = key;
+        } else {
+          _activeVerseKey.value = '';
+        }
+      }
+    });
+
+    audioCtrl.isPlaying.listen((playing) {
+      if (audioCtrl.isPlaylistActive(_category.value == QuranCategory.juz ? 'juz' : 'surah', _number.value)) {
+        if (!playing && audioCtrl.currentPlayKey.value.isEmpty) {
+          _activeVerseKey.value = '';
+        }
+      }
+    });
+  }
+
+  Future<void> playPlaylist({
+    required List<String> urls,
+    required List<String> keys,
+  }) async {
+    final type = _category.value == QuranCategory.juz ? 'juz' : 'surah';
+    
+    // Jika playlist untuk surah/juz ini sudah aktif, toggle play/pause
+    if (audioCtrl.isPlaylistActive(type, _number.value)) {
+      await audioCtrl.togglePlay();
+      return;
+    }
+
+    // Hentikan pemutaran single ayat jika sedang aktif
+    await stopAudio();
+
+    // Jalankan pemutaran playlist melalui global controller
+    await audioCtrl.playPlaylist(
+      urls: urls,
+      keys: keys,
+      type: type,
+      parentNumber: _number.value,
+      startIndex: 0,
+    );
   }
 
   @override
@@ -112,7 +160,7 @@ class DetailSurahController extends GetxController {
       _number.value = payload.number;
 
       if (payload.category == QuranCategory.surah) {
-        _surahDetail.value = await HomeSource.fetchDetailSurah(payload.number);
+        _surahDetail.value = await HomeSource.fetchDetailSurah(payload.number.toString());
         _juzDetail.value = null;
       } else {
         final surahList = await _resolveSurahList();
@@ -201,15 +249,32 @@ class DetailSurahController extends GetxController {
     await _audioPlayer.stop();
     _activeVerseKey.value = '';
     _isPlaying.value = false;
+    
+    // Hentikan juga playlist player jika aktif untuk surah/juz ini
+    final type = _category.value == QuranCategory.juz ? 'juz' : 'surah';
+    if (audioCtrl.isPlaylistActive(type, _number.value)) {
+      await audioCtrl.stopPlay();
+    }
   }
 
   Future<void> changeQari(String qariId) async {
     _selectedQari.value = qariId;
     await _prefs?.setString(_prefQariKey, qariId);
+    
+    // Hentikan pemutaran playlist jika qari berganti
+    final type = _category.value == QuranCategory.juz ? 'juz' : 'surah';
+    if (audioCtrl.isPlaylistActive(type, _number.value)) {
+      await audioCtrl.stopPlay();
+    }
   }
 
   bool isVersePlaying(String verseKey) {
-    return _activeVerseKey.value == verseKey && _isPlaying.value;
+    final bool isSinglePlaying = _activeVerseKey.value == verseKey && _isPlaying.value;
+    final bool isPlaylistPlaying = _activeVerseKey.value == verseKey && 
+        audioCtrl.isPlaying.value && 
+        audioCtrl.isPlaylistActive(_category.value == QuranCategory.juz ? 'juz' : 'surah', _number.value);
+    
+    return isSinglePlaying || isPlaylistPlaying;
   }
 
   _DetailPayload _resolveArguments(dynamic args) {

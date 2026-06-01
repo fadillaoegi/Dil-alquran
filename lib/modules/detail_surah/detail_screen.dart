@@ -122,8 +122,14 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                       itemBuilder: (context, index) {
                         if (index == 0) {
                           return isJuz
-                              ? _JuzHeaderCard(juzDetail: controller.juzDetail!)
-                              : _SurahHeaderCard(data: controller.surahDetail);
+                              ? _JuzHeaderCard(
+                                  juzDetail: controller.juzDetail!,
+                                  verseItems: verseItems,
+                                )
+                              : _SurahHeaderCard(
+                                  data: controller.surahDetail,
+                                  verseItems: verseItems,
+                                );
                         }
 
                         final item = verseItems[index - 1];
@@ -388,12 +394,17 @@ class _LastReadBanner extends StatelessWidget {
 }
 
 class _SurahHeaderCard extends StatelessWidget {
-  const _SurahHeaderCard({required this.data});
+  const _SurahHeaderCard({
+    required this.data,
+    required this.verseItems,
+  });
 
   final SurahDetail data;
+  final List<_VerseUiModel> verseItems;
 
   @override
   Widget build(BuildContext context) {
+    final DetailSurahController controller = Get.find<DetailSurahController>();
     final nameLatin = data.namaLatin ?? '';
     final meaning = data.arti ?? '';
     final arabicName = data.nama ?? '';
@@ -442,6 +453,55 @@ class _SurahHeaderCard extends StatelessWidget {
               _pillText('$versesCount Ayat'),
             ],
           ),
+          const SizedBox(height: 16.0),
+          Obx(() {
+            final isCurrentPlaylistActive = controller.audioCtrl.isPlaylistActive('surah', data.nomor ?? 0);
+            final isPlaying = controller.audioCtrl.isPlaying.value && isCurrentPlaylistActive;
+            final isLoading = controller.audioCtrl.isLoading.value && isCurrentPlaylistActive;
+
+            return ElevatedButton.icon(
+              onPressed: () {
+                final urls = verseItems.map((item) {
+                  return item.audio?[controller.selectedQari] ?? 
+                         (item.audio != null && item.audio!.isNotEmpty ? item.audio!.values.first : '');
+                }).where((url) => url.isNotEmpty).toList();
+
+                final keys = verseItems.map((item) => item.verseKey).toList();
+
+                controller.playPlaylist(urls: urls, keys: keys);
+              },
+              icon: isLoading 
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(color: ColorApp.primary, strokeWidth: 2),
+                    )
+                  : Icon(
+                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      color: ColorApp.primary,
+                      size: 20,
+                    ),
+              label: Text(
+                isLoading 
+                    ? 'Memuat...' 
+                    : (isPlaying ? 'Jeda Surah' : 'Putar Surah Penuh'),
+                style: const TextStyle(
+                  color: ColorApp.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.0,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorApp.white,
+                foregroundColor: ColorApp.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                elevation: 4.0,
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -460,12 +520,18 @@ class _SurahHeaderCard extends StatelessWidget {
 }
 
 class _JuzHeaderCard extends StatelessWidget {
-  const _JuzHeaderCard({required this.juzDetail});
+  const _JuzHeaderCard({
+    required this.juzDetail,
+    required this.verseItems,
+  });
 
   final JuzDetail juzDetail;
+  final List<_VerseUiModel> verseItems;
 
   @override
   Widget build(BuildContext context) {
+    final DetailSurahController controller = Get.find<DetailSurahController>();
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(16.0),
@@ -492,16 +558,69 @@ class _JuzHeaderCard extends StatelessWidget {
             style: white500.copyWith(fontSize: 13.0),
           ),
           const SizedBox(height: 10.0),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-            decoration: BoxDecoration(
-              color: ColorApp.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-            child: Text(
-              'Total ${juzDetail.totalAyat} ayat',
-              style: white600.copyWith(fontSize: 12.0),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                decoration: BoxDecoration(
+                  color: ColorApp.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                child: Text(
+                  'Total ${juzDetail.totalAyat} ayat',
+                  style: white600.copyWith(fontSize: 12.0),
+                ),
+              ),
+              Obx(() {
+                final isCurrentPlaylistActive = controller.audioCtrl.isPlaylistActive('juz', juzDetail.number);
+                final isPlaying = controller.audioCtrl.isPlaying.value && isCurrentPlaylistActive;
+                final isLoading = controller.audioCtrl.isLoading.value && isCurrentPlaylistActive;
+
+                return ElevatedButton.icon(
+                  onPressed: () {
+                    final urls = verseItems.map((item) {
+                      return item.audio?[controller.selectedQari] ?? 
+                             (item.audio != null && item.audio!.isNotEmpty ? item.audio!.values.first : '');
+                    }).where((url) => url.isNotEmpty).toList();
+
+                    final keys = verseItems.map((item) => item.verseKey).toList();
+
+                    controller.playPlaylist(urls: urls, keys: keys);
+                  },
+                  icon: isLoading 
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(color: ColorApp.primary, strokeWidth: 2),
+                        )
+                      : Icon(
+                          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                          color: ColorApp.primary,
+                          size: 18,
+                        ),
+                  label: Text(
+                    isLoading 
+                        ? 'Memuat...' 
+                        : (isPlaying ? 'Jeda Juz' : 'Putar Juz'),
+                    style: const TextStyle(
+                      color: ColorApp.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorApp.white,
+                    foregroundColor: ColorApp.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    elevation: 3.0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  ),
+                );
+              }),
+            ],
           ),
         ],
       ),
