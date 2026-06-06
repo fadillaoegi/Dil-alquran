@@ -15,6 +15,14 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      Get.offAndToNamed(RouteScreen.menu);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -69,37 +77,8 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 40),
-            ElevatedButton.icon(
-              onPressed: () {
-                Get.offAndToNamed(RouteScreen.home);
-              },
-              icon: const Icon(
-                Icons.menu_book_rounded,
-                color: ColorApp.primary,
-                size: 22,
-              ),
-              label: const Text(
-                "Mulai Membaca",
-                style: TextStyle(
-                  color: ColorApp.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16.0,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorApp.white,
-                foregroundColor: ColorApp.primary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 36.0,
-                  vertical: 16.0,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                elevation: 10.0,
-                shadowColor: ColorApp.black.withValues(alpha: 0.4),
-              ),
+            const CircularProgressIndicator(
+              color: ColorApp.primary,
             ),
           ],
         ),

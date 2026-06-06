@@ -38,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: ColorApp.white,
           ),
         ),
+        iconTheme: const IconThemeData(color: ColorApp.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, color: ColorApp.white),
@@ -95,80 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Column(
           children: [
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-              padding: const EdgeInsets.all(20.0),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xff0d4e34),
-                    ColorApp.primary,
-                    Color(0xff8ccf72),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: ColorApp.primary.withValues(alpha: 0.35),
-                    offset: const Offset(0, 8),
-                    blurRadius: 16,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        isSurah ? "Mode Surah" : "Mode Juz",
-                        style: white700.copyWith(fontSize: 12.0),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10.0,
-                          vertical: 5.0,
-                        ),
-                        decoration: BoxDecoration(
-                          color: ColorApp.white.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Text(
-                          isSurah
-                              ? "${surahList.length} surah"
-                              : "${juzList.length} juz",
-                          style: white600.copyWith(fontSize: 11.0),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    "Assalamualaikum",
-                    style: TextStyle(
-                      color: ColorApp.white,
-                      fontSize: 26.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isSurah
-                        ? "Cari surah dan baca ayat lengkap dengan audio."
-                        : "Telusuri 30 juz dengan navigasi ayat yang rapi.",
-                    style: TextStyle(
-                      color: ColorApp.white.withValues(alpha: 0.9),
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w300,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -228,7 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30.0),
-                    borderSide: const BorderSide(color: ColorApp.primary, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: ColorApp.primary, width: 1.5),
                   ),
                 ),
               ),

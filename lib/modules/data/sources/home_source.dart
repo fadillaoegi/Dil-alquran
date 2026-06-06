@@ -23,13 +23,13 @@ class HomeSource {
 
   static Future<SurahDetail> fetchDetailSurah(String surahNumber) async {
     try {
-      String url = "https://api.quran.gading.dev/surah/$surahNumber";
+      String url = "${ApiConfig.baseUrl}/surat/$surahNumber";
 
       Map? resFetchSurahDetail = await AppRequest.gets(url);
 
       if (resFetchSurahDetail == null) return SurahDetail();
 
-      if (resFetchSurahDetail["status"] == "OK") {
+      if (resFetchSurahDetail["code"] == 200) {
         SurahDetail mapToModel =
             SurahDetail.fromJson(resFetchSurahDetail["data"]);
         return mapToModel;
@@ -40,20 +40,6 @@ class HomeSource {
       print("Catch from Source: $error");
       return SurahDetail();
     }
-  }
-
-  static Future<Map?> fetchJuzDetail(String juzNumber) async {
-    try {
-      String url = "https://api.quran.gading.dev/juz/$juzNumber";
-      Map? res = await AppRequest.gets(url);
-      if (res == null) return null;
-      if (res["status"] == "OK") {
-        return res["data"];
-      }
-    } catch (error) {
-      print("Catch from Source fetchJuzDetail: $error");
-    }
-    return null;
   }
 
   static List<JuzSummary> buildJuzSummaries(List<Surah> surahList) {

@@ -113,14 +113,10 @@ class AudioController extends GetxController {
 
       // Buat playlist gabungan
       final List<AudioSource> sources = urls.map((url) => AudioSource.uri(Uri.parse(url))).toList();
-      final playlist = ConcatenatingAudioSource(
-        useLazyPreparation: true,
-        children: sources,
-      );
 
       // Set audio source pada player
-      await _player.setAudioSource(
-        playlist,
+      await _player.setAudioSources(
+        sources,
         initialIndex: startIndex,
         initialPosition: Duration.zero,
       );
@@ -135,7 +131,7 @@ class AudioController extends GetxController {
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );
-      print("Error in playPlaylist: $e");
+      debugPrint("Error in playPlaylist: $e");
     } finally {
       isLoading.value = false;
     }
