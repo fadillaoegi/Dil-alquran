@@ -23,6 +23,7 @@ class ShalatController extends GetxController {
   final RxBool isLoadingJadwal = false.obs;
 
   final RxBool isNotificationEnabled = false.obs;
+  final RxString notificationSound = "adzan".obs;
 
   @override
   void onInit() {
@@ -36,6 +37,7 @@ class ShalatController extends GetxController {
     selectedProvinsi.value = prefs.getString('saved_provinsi') ?? "";
     selectedKabKota.value = prefs.getString('saved_kabkota') ?? "";
     isNotificationEnabled.value = prefs.getBool('notif_shalat') ?? false;
+    notificationSound.value = prefs.getString('notif_sound') ?? "adzan";
   }
 
   Future<void> _savePreferences() async {
@@ -43,6 +45,7 @@ class ShalatController extends GetxController {
     await prefs.setString('saved_provinsi', selectedProvinsi.value);
     await prefs.setString('saved_kabkota', selectedKabKota.value);
     await prefs.setBool('notif_shalat', isNotificationEnabled.value);
+    await prefs.setString('notif_sound', notificationSound.value);
   }
 
   Future<void> fetchProvinsi() async {
@@ -194,6 +197,14 @@ class ShalatController extends GetxController {
     }
   }
 
+  Future<void> changeNotificationSound(String soundType) async {
+    notificationSound.value = soundType;
+    _savePreferences();
+    if (isNotificationEnabled.value) {
+      _scheduleAllNotifications();
+    }
+  }
+
   void _scheduleAllNotifications() async {
     await _notificationService.cancelAll();
 
@@ -220,6 +231,7 @@ class ShalatController extends GetxController {
               "Waktu ${entry.key}",
               "Telah masuk waktu shalat ${entry.key} untuk wilayah ${selectedKabKota.value}.",
               dt,
+              notificationSound.value,
             );
           }
         } catch (e) {

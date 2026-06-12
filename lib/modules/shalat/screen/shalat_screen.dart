@@ -118,6 +118,48 @@ class ShalatScreen extends GetView<ShalatController> {
                     }
                   );
                 }),
+                
+                Obx(() {
+                  if (controller.isNotificationEnabled.value) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        Text("Nada Dering Notifikasi", style: primary700.copyWith(fontSize: 14)),
+                        const SizedBox(height: 8),
+                        RadioGroup<String>(
+                          groupValue: controller.notificationSound.value,
+                          onChanged: (value) {
+                            if (value != null) controller.changeNotificationSound(value);
+                          },
+                          child: const Row(
+                            children: [
+                              Expanded(
+                                child: RadioListTile<String>(
+                                  title: Text('Adzan', style: TextStyle(fontSize: 14)),
+                                  value: 'adzan',
+                                  contentPadding: EdgeInsets.zero,
+                                  activeColor: ColorApp.primary,
+                                  visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+                                ),
+                              ),
+                              Expanded(
+                                child: RadioListTile<String>(
+                                  title: Text('Sistem', style: TextStyle(fontSize: 14)),
+                                  value: 'device',
+                                  contentPadding: EdgeInsets.zero,
+                                  activeColor: ColorApp.primary,
+                                  visualDensity: VisualDensity(horizontal: -4, vertical: -4),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
               ],
             ),
           ),

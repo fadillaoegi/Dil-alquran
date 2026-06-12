@@ -1,6 +1,7 @@
 import 'package:dilalquran/modules/home/controller/home_controller.dart';
 import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/themes/colors.dart';
+import 'package:dilalquran/services/notification_service.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:dilalquran/widgets/list_surahayat_widget.dart';
 import 'package:flutter/material.dart';
@@ -68,6 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          NotificationService().testNotification();
+        },
+        backgroundColor: ColorApp.primary,
+        tooltip: 'Test Adzan',
+        child: const Icon(Icons.notifications_active, color: ColorApp.white),
       ),
       body: Obx(() {
         if (controller.isLoading) {
