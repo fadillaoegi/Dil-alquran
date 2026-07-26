@@ -2,6 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
 import 'package:dilalquran/modules/data/sources/home_source.dart';
 import 'package:dilalquran/modules/hafizh/controller/hafizh_controller.dart';
+import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:get/get.dart';
 
 // Satu ayat berikut identitas surahnya — agar daftar bisa memuat ayat
@@ -169,11 +170,29 @@ class HafizhDetailController extends GetxController {
 
   bool isVerseActive(HafizhVerse verse) => activeVerseKey.value == _key(verse);
 
-  Future<void> togglePlayFromStart() async {
-    if (isPlaying.value || activeVerseKey.value.isNotEmpty) {
-      await stop();
-    } else if (verses.isNotEmpty) {
-      await startFrom(verses.first);
+  bool get hasActive => activeVerseKey.value.isNotEmpty;
+
+  // Tombol utama: putar dari awal / jeda / lanjut.
+  Future<void> togglePlayPause() async {
+    if (!hasActive) {
+      if (verses.isNotEmpty) await startFrom(verses.first);
+    } else if (isPlaying.value) {
+      await _player.pause();
+    } else {
+      await _player.resume();
+    }
+  }
+
+  // Tombol per-ayat: jika ayat ini aktif -> jeda/lanjut; jika bukan -> mulai.
+  Future<void> toggleVerse(HafizhVerse verse) async {
+    if (isVerseActive(verse)) {
+      if (isPlaying.value) {
+        await _player.pause();
+      } else {
+        await _player.resume();
+      }
+    } else {
+      await startFrom(verse);
     }
   }
 
@@ -207,10 +226,10 @@ class HafizhDetailController extends GetxController {
       await _player.setPlaybackRate(speed.value);
     } catch (_) {
       await stop();
-      Get.snackbar(
+      showAppSnackbar(
         'Gagal Memutar Audio',
         'Periksa koneksi internet lalu coba lagi.',
-        snackPosition: SnackPosition.BOTTOM,
+        isError: true,
       );
     }
   }

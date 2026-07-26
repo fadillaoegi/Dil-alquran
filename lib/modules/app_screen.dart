@@ -4,6 +4,7 @@ import 'package:dilalquran/routes/list_get_pages.dart';
 import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/responsive.dart';
+import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,6 +16,7 @@ class AppScreen extends StatelessWidget {
     return GetMaterialApp(
       initialRoute: RouteScreen.splash,
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: appMessengerKey,
       getPages: getPages,
       initialBinding: BindingsBuilder(() {
         Get.put(AudioController(), permanent: true);

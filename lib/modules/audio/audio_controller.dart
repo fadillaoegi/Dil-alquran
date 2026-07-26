@@ -1,3 +1,4 @@
+import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
@@ -100,12 +101,10 @@ class AudioController extends GetxController {
       currentPlayKey.value = keys[startIndex];
 
       if (urls.isEmpty) {
-        Get.snackbar(
+        showAppSnackbar(
           "Gagal Memutar",
           "Daftar audio kosong atau tidak tersedia.",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
+          isError: true,
         );
         isLoading.value = false;
         return;
@@ -124,12 +123,10 @@ class AudioController extends GetxController {
       // Putar audio
       _player.play();
     } catch (e) {
-      Get.snackbar(
+      showAppSnackbar(
         "Error Pemutaran",
-        "Terjadi kesalahan saat memuat audio: $e",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
+        "Terjadi kesalahan saat memuat audio.",
+        isError: true,
       );
       debugPrint("Error in playPlaylist: $e");
     } finally {

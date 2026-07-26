@@ -7,7 +7,7 @@ import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
 import 'package:dilalquran/modules/data/models/surah_model.dart';
 import 'package:dilalquran/modules/data/sources/home_source.dart';
 import 'package:dilalquran/modules/home/controller/home_controller.dart';
-import 'package:dilalquran/themes/colors.dart';
+import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -186,10 +186,10 @@ class DetailSurahController extends GetxController {
         (audio != null && audio.isNotEmpty ? audio.values.first : null);
 
     if (audioUrl == null || audioUrl.isEmpty) {
-      Get.snackbar(
+      showAppSnackbar(
         'Audio Tidak Tersedia',
         'Audio untuk ayat ini belum tersedia.',
-        snackPosition: SnackPosition.BOTTOM,
+        isError: true,
       );
       return;
     }
@@ -201,11 +201,25 @@ class DetailSurahController extends GetxController {
       surahNameLatin: surahNameLatin,
     );
 
-    if (_activeVerseKey.value == verseKey && _isPlaying.value) {
-      await _audioPlayer.stop();
-      _activeVerseKey.value = '';
-      _isPlaying.value = false;
+    final type = _category.value == QuranCategory.juz ? 'juz' : 'surah';
+    final playlistActive = audioCtrl.isPlaylistActive(type, _number.value);
+
+    // Ayat ini yang sedang aktif -> jeda / lanjut (bukan stop).
+    if (_activeVerseKey.value == verseKey) {
+      if (playlistActive) {
+        // Dikendalikan oleh pemutar playlist.
+        await audioCtrl.togglePlay();
+      } else if (_isPlaying.value) {
+        await _audioPlayer.pause();
+      } else {
+        await _audioPlayer.resume();
+      }
       return;
+    }
+
+    // Ayat berbeda -> hentikan playlist bila aktif, lalu putar ayat ini.
+    if (playlistActive) {
+      await audioCtrl.stopPlay();
     }
 
     _activeVerseKey.value = verseKey;
@@ -215,12 +229,10 @@ class DetailSurahController extends GetxController {
     } catch (_) {
       _activeVerseKey.value = '';
       _isPlaying.value = false;
-      Get.snackbar(
+      showAppSnackbar(
         'Gagal Memutar Audio',
         'Periksa koneksi internet lalu coba lagi.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: ColorApp.black,
-        colorText: ColorApp.white,
+        isError: true,
       );
     }
   }

@@ -1,7 +1,7 @@
 import 'package:dilalquran/modules/data/sources/shalat_source.dart';
 import 'package:dilalquran/modules/shalat/model/shalat_model.dart';
 import 'package:dilalquran/services/notification_service.dart';
-import 'package:dilalquran/themes/colors.dart';
+import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -202,15 +202,7 @@ class ShalatController extends GetxController {
   }
 
   void _snack(String title, String message, {bool success = false}) {
-    Get.snackbar(
-      title,
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: success ? ColorApp.primary : ColorApp.black,
-      colorText: ColorApp.white,
-      margin: const EdgeInsets.all(16.0),
-      duration: const Duration(seconds: 3),
-    );
+    showAppSnackbar(title, message, isError: !success);
   }
 
   String _findClosestMatch(String query, List<String> list) {

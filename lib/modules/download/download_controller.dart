@@ -2,8 +2,7 @@ import 'package:dilalquran/modules/data/models/juz_model.dart';
 import 'package:dilalquran/modules/data/sources/doa_source.dart';
 import 'package:dilalquran/modules/data/sources/home_source.dart';
 import 'package:dilalquran/services/offline_store.dart';
-import 'package:dilalquran/themes/colors.dart';
-import 'package:flutter/material.dart';
+import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:get/get.dart';
 
 // Mengelola unduhan konten teks (surah/juz/doa) untuk akses offline.
@@ -121,13 +120,10 @@ class DownloadController extends GetxController {
   }
 
   void _failSnackbar() {
-    Get.snackbar(
+    showAppSnackbar(
       "Gagal Mengunduh",
       "Periksa koneksi internet lalu coba lagi.",
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: ColorApp.black,
-      colorText: ColorApp.white,
-      margin: const EdgeInsets.all(16.0),
+      isError: true,
     );
   }
 }
