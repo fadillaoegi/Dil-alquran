@@ -21,7 +21,7 @@ class FormSearch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10.0),
+      margin: const EdgeInsets.only(bottom: 24.0),
       child: Stack(
         clipBehavior: Clip.none,
         children: [

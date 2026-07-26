@@ -942,14 +942,15 @@ class _AyatRangeSheetState extends State<_AyatRangeSheet> {
   Widget build(BuildContext context) {
     final ayatOptions = List<int>.generate(widget.jumlahAyat, (i) => i + 1);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20.0,
-        16.0,
-        20.0,
-        MediaQuery.of(context).viewInsets.bottom + 24.0,
-      ),
-      child: Column(
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20.0,
+          16.0,
+          20.0,
+          MediaQuery.of(context).viewInsets.bottom + 24.0,
+        ),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1067,6 +1068,7 @@ class _AyatRangeSheetState extends State<_AyatRangeSheet> {
             ],
           ),
         ],
+      ),
       ),
     );
   }
@@ -1315,14 +1317,15 @@ class _JuzAyatRangeSheetState extends State<_JuzAyatRangeSheet> {
   Widget build(BuildContext context) {
     final ayatOptions = List<int>.generate(widget.totalAyat, (i) => i + 1);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20.0,
-        16.0,
-        20.0,
-        MediaQuery.of(context).viewInsets.bottom + 24.0,
-      ),
-      child: Column(
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20.0,
+          16.0,
+          20.0,
+          MediaQuery.of(context).viewInsets.bottom + 24.0,
+        ),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1440,6 +1443,7 @@ class _JuzAyatRangeSheetState extends State<_JuzAyatRangeSheet> {
             ],
           ),
         ],
+      ),
       ),
     );
   }
