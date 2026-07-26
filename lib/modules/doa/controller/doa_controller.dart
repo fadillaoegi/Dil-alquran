@@ -6,6 +6,7 @@ class DoaController extends GetxController {
   final DoaSource _doaSource = DoaSource();
 
   final RxList<DoaModel> _allDoaList = <DoaModel>[].obs;
+  List<DoaModel> get allDoa => _allDoaList;
   final RxList<DoaModel> displayedDoasList = <DoaModel>[].obs;
   
   final RxBool isLoading = true.obs;
@@ -23,7 +24,7 @@ class DoaController extends GetxController {
     fetchDoa();
   }
 
-  void fetchDoa() async {
+  Future<void> fetchDoa() async {
     isLoading.value = true;
     isError.value = false;
 

@@ -1,6 +1,7 @@
 import 'package:dilalquran/modules/data/sources/shalat_source.dart';
 import 'package:dilalquran/modules/shalat/model/shalat_model.dart';
 import 'package:dilalquran/services/notification_service.dart';
+import 'package:dilalquran/themes/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -21,9 +22,25 @@ class ShalatController extends GetxController {
   final RxBool isLoadingProvinsi = true.obs;
   final RxBool isLoadingKabKota = false.obs;
   final RxBool isLoadingJadwal = false.obs;
+  final RxBool isDetectingLocation = false.obs;
 
   final RxBool isNotificationEnabled = false.obs;
   final RxString notificationSound = "adzan".obs;
+
+  // Waktu sholat yang bisa dinotifikasi (Imsak/Dhuha/Terbit tidak termasuk).
+  static const List<String> prayerNames = [
+    "Subuh",
+    "Dzuhur",
+    "Ashar",
+    "Maghrib",
+    "Isya",
+  ];
+
+  // Peta waktu sholat mana saja yang notifikasinya diaktifkan.
+  // Default: semua aktif, agar perilaku lama tetap sama.
+  final RxMap<String, bool> enabledPrayers = <String, bool>{
+    for (final prayer in prayerNames) prayer: true,
+  }.obs;
 
   @override
   void onInit() {
@@ -38,6 +55,14 @@ class ShalatController extends GetxController {
     selectedKabKota.value = prefs.getString('saved_kabkota') ?? "";
     isNotificationEnabled.value = prefs.getBool('notif_shalat') ?? false;
     notificationSound.value = prefs.getString('notif_sound') ?? "adzan";
+
+    // Jika belum pernah disimpan, biarkan default (semua aktif).
+    final savedPrayers = prefs.getStringList('notif_prayers');
+    if (savedPrayers != null) {
+      for (final prayer in prayerNames) {
+        enabledPrayers[prayer] = savedPrayers.contains(prayer);
+      }
+    }
   }
 
   Future<void> _savePreferences() async {
@@ -46,6 +71,10 @@ class ShalatController extends GetxController {
     await prefs.setString('saved_kabkota', selectedKabKota.value);
     await prefs.setBool('notif_shalat', isNotificationEnabled.value);
     await prefs.setString('notif_sound', notificationSound.value);
+
+    final enabledList =
+        prayerNames.where((prayer) => enabledPrayers[prayer] == true).toList();
+    await prefs.setStringList('notif_prayers', enabledList);
   }
 
   Future<void> fetchProvinsi() async {
@@ -57,64 +86,131 @@ class ShalatController extends GetxController {
     if (selectedProvinsi.value.isNotEmpty && listProvinsi.contains(selectedProvinsi.value)) {
       fetchKabKota(selectedProvinsi.value, isInit: true);
     } else if (selectedProvinsi.value.isEmpty) {
-      // Jika belum ada lokasi tersimpan, coba deteksi otomatis
-      _determinePosition();
+      // Jika belum ada lokasi tersimpan, coba deteksi otomatis (diam-diam).
+      _resolveFromGps();
     }
   }
 
-  Future<void> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  // Dipanggil tombol "Gunakan lokasi HP" — deteksi ulang lokasi via GPS.
+  Future<void> useCurrentLocation() async {
+    if (isDetectingLocation.value) return;
+    isDetectingLocation.value = true;
+    try {
+      final ok = await _resolveFromGps(showFeedback: true);
+      if (ok) {
+        _snack(
+          "Lokasi Diperbarui",
+          "Jadwal disesuaikan dengan lokasi perangkatmu.",
+          success: true,
+        );
+      }
+    } finally {
+      isDetectingLocation.value = false;
+    }
+  }
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+  // Deteksi lokasi via GPS lalu cocokkan ke provinsi & kab/kota.
+  // Mengembalikan true bila berhasil menetapkan lokasi.
+  Future<bool> _resolveFromGps({bool showFeedback = false}) async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (showFeedback) {
+        _snack("Lokasi Nonaktif",
+            "Aktifkan layanan lokasi (GPS) perangkat lalu coba lagi.");
+      }
+      return false;
+    }
 
-    permission = await Geolocator.checkPermission();
+    var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      if (permission == LocationPermission.denied) {
+        if (showFeedback) {
+          _snack("Izin Ditolak",
+              "Aplikasi butuh izin lokasi untuk mendeteksi wilayahmu.");
+        }
+        return false;
+      }
     }
 
-    if (permission == LocationPermission.deniedForever) return;
+    if (permission == LocationPermission.deniedForever) {
+      if (showFeedback) {
+        _snack("Izin Diblokir",
+            "Aktifkan izin lokasi lewat Pengaturan aplikasi.");
+      }
+      return false;
+    }
 
     try {
-      Position position = await Geolocator.getCurrentPosition(
+      final position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.medium);
-      
-      List<Placemark> placemarks = await placemarkFromCoordinates(
+      final placemarks = await placemarkFromCoordinates(
           position.latitude, position.longitude);
 
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks.first;
-        String? adminArea = place.administrativeArea; // e.g. "Daerah Khusus Ibukota Jakarta"
-        String? subAdminArea = place.subAdministrativeArea; // e.g. "Kota Jakarta Pusat"
+      if (placemarks.isEmpty) {
+        if (showFeedback) {
+          _snack("Gagal", "Tidak dapat menentukan wilayah dari lokasi.");
+        }
+        return false;
+      }
 
-        if (adminArea != null) {
-          // Cari provinsi terdekat (Fuzzy search simpel)
-          String matchedProv = _findClosestMatch(adminArea, listProvinsi);
-          if (matchedProv.isNotEmpty) {
-            selectedProvinsi.value = matchedProv;
-            
-            // Fetch kabkota berdasarkan provinsi yang cocok
-            isLoadingKabKota.value = true;
-            final kabKotaResult = await _source.getKabKota(matchedProv);
-            listKabKota.assignAll(kabKotaResult);
-            isLoadingKabKota.value = false;
+      final place = placemarks.first;
+      final adminArea = place.administrativeArea; // provinsi
+      final subAdminArea = place.subAdministrativeArea; // kabupaten/kota
 
-            if (subAdminArea != null) {
-              String matchedKota = _findClosestMatch(subAdminArea, listKabKota);
-              if (matchedKota.isNotEmpty) {
-                selectedKabKota.value = matchedKota;
-                _savePreferences();
-                fetchJadwal(matchedProv, matchedKota);
-              }
-            }
-          }
+      if (adminArea == null) {
+        if (showFeedback) _snack("Gagal", "Wilayah tidak terdeteksi.");
+        return false;
+      }
+
+      final matchedProv = _findClosestMatch(adminArea, listProvinsi);
+      if (matchedProv.isEmpty) {
+        if (showFeedback) {
+          _snack("Tidak Cocok",
+              "Provinsi lokasimu tidak ditemukan di daftar.");
+        }
+        return false;
+      }
+
+      selectedProvinsi.value = matchedProv;
+      isLoadingKabKota.value = true;
+      final kabKotaResult = await _source.getKabKota(matchedProv);
+      listKabKota.assignAll(kabKotaResult);
+      isLoadingKabKota.value = false;
+
+      if (subAdminArea != null) {
+        final matchedKota = _findClosestMatch(subAdminArea, listKabKota);
+        if (matchedKota.isNotEmpty) {
+          selectedKabKota.value = matchedKota;
+          _savePreferences();
+          await fetchJadwal(matchedProv, matchedKota);
+          return true;
         }
       }
+
+      if (showFeedback) {
+        _snack("Sebagian Terdeteksi",
+            "Provinsi $matchedProv terdeteksi, silakan pilih kota secara manual.");
+      }
+      return false;
     } catch (e) {
-      // Ignore
+      if (showFeedback) {
+        _snack("Gagal", "Terjadi kesalahan saat mendeteksi lokasi.");
+      }
+      return false;
     }
+  }
+
+  void _snack(String title, String message, {bool success = false}) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: success ? ColorApp.primary : ColorApp.black,
+      colorText: ColorApp.white,
+      margin: const EdgeInsets.all(16.0),
+      duration: const Duration(seconds: 3),
+    );
   }
 
   String _findClosestMatch(String query, List<String> list) {
@@ -152,6 +248,16 @@ class ShalatController extends GetxController {
     }
   }
 
+  // Muat ulang data (untuk pull-to-refresh): jadwal bila lokasi sudah dipilih,
+  // selain itu muat ulang daftar provinsi.
+  Future<void> refreshJadwal() async {
+    if (selectedProvinsi.value.isNotEmpty && selectedKabKota.value.isNotEmpty) {
+      await fetchJadwal(selectedProvinsi.value, selectedKabKota.value);
+    } else {
+      await fetchProvinsi();
+    }
+  }
+
   Future<void> onKabKotaSelected(String kabkota) async {
     selectedKabKota.value = kabkota;
     _savePreferences();
@@ -175,7 +281,27 @@ class ShalatController extends GetxController {
 
     if (value) {
       await _notificationService.requestPermissions();
-      _scheduleAllNotifications();
+
+      // Jika lokasi belum dipilih, tidak ada jadwal untuk dijadwalkan.
+      if (selectedKabKota.value.isEmpty) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Pilih lokasi terlebih dahulu untuk mengaktifkan pengingat."),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Jadwal belum termuat (mis. baru buka app), ambil dulu lalu jadwalkan.
+      if (listJadwal.isEmpty) {
+        await fetchJadwal(selectedProvinsi.value, selectedKabKota.value);
+      } else {
+        _scheduleAllNotifications();
+      }
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -205,13 +331,84 @@ class ShalatController extends GetxController {
     }
   }
 
+  // Aktif/nonaktifkan notifikasi untuk satu waktu sholat tertentu.
+  Future<void> togglePrayer(String prayer, bool value) async {
+    enabledPrayers[prayer] = value;
+    _savePreferences();
+    if (isNotificationEnabled.value) {
+      _scheduleAllNotifications();
+    }
+  }
+
+  // ---- Ringkasan untuk tampilan ----
+  int get enabledPrayerCount =>
+      prayerNames.where((prayer) => enabledPrayers[prayer] == true).length;
+
+  String get soundLabel =>
+      notificationSound.value == 'adzan' ? "Adzan" : "Suara Sistem";
+
+  String get locationLabel {
+    final kota = selectedKabKota.value.trim();
+    final provinsi = selectedProvinsi.value.trim();
+
+    if (kota.isNotEmpty && provinsi.isNotEmpty) {
+      return "$kota, $provinsi";
+    }
+    if (kota.isNotEmpty) return kota;
+    if (provinsi.isNotEmpty) return provinsi;
+    return "Lokasi belum dipilih";
+  }
+
+  String get _todayStr {
+    final now = DateTime.now();
+    return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+  }
+
+  ShalatModel? get todaySchedule {
+    for (final jadwal in listJadwal) {
+      if (jadwal.tanggalLengkap == _todayStr) return jadwal;
+    }
+    return null;
+  }
+
+  // Waktu sholat terdekat yang akan datang (lintas hari bila perlu).
+  NextPrayer? get nextPrayer {
+    final now = DateTime.now();
+    for (final jadwal in listJadwal) {
+      if (jadwal.tanggalLengkap == null) continue;
+      final times = <String, String?>{
+        "Subuh": jadwal.subuh,
+        "Dzuhur": jadwal.dzuhur,
+        "Ashar": jadwal.ashar,
+        "Maghrib": jadwal.maghrib,
+        "Isya": jadwal.isya,
+      };
+      for (final entry in times.entries) {
+        final value = entry.value;
+        if (value == null) continue;
+        final dt = DateTime.tryParse("${jadwal.tanggalLengkap} $value:00");
+        if (dt != null && dt.isAfter(now)) {
+          return NextPrayer(name: entry.key, time: dt);
+        }
+      }
+    }
+    return null;
+  }
+
+  // Batas aman jumlah notifikasi terjadwal.
+  // iOS hanya menyimpan maks 64 notifikasi pending; sisanya diam-diam dibuang.
+  // 5 waktu x 12 hari = 60, masih di bawah batas dan mencakup ~2 minggu ke depan.
+  static const int _maxScheduled = 60;
+
   void _scheduleAllNotifications() async {
     await _notificationService.cancelAll();
 
+    final now = DateTime.now();
     int idCounter = 1;
+
     for (var jadwal in listJadwal) {
       if (jadwal.tanggalLengkap == null) continue;
-      
+
       final times = {
         "Subuh": jadwal.subuh,
         "Dzuhur": jadwal.dzuhur,
@@ -222,10 +419,12 @@ class ShalatController extends GetxController {
 
       for (var entry in times.entries) {
         if (entry.value == null) continue;
+        // Lewati waktu sholat yang notifikasinya dimatikan user.
+        if (enabledPrayers[entry.key] != true) continue;
         try {
           // Format dari API misal: "2026-06-01" dan jam "04:36"
           DateTime dt = DateTime.parse("${jadwal.tanggalLengkap} ${entry.value}:00");
-          if (dt.isAfter(DateTime.now())) {
+          if (dt.isAfter(now)) {
             _notificationService.schedulePrayer(
               idCounter++,
               "Waktu ${entry.key}",
@@ -237,7 +436,17 @@ class ShalatController extends GetxController {
         } catch (e) {
           // Abaikan error parse
         }
+
+        // Berhenti begitu mencapai batas aman agar tidak ada jadwal yang dibuang.
+        if (idCounter > _maxScheduled) return;
       }
     }
   }
+}
+
+class NextPrayer {
+  final String name;
+  final DateTime time;
+
+  const NextPrayer({required this.name, required this.time});
 }

@@ -1,10 +1,12 @@
+import 'package:dilalquran/modules/onboarding/controller/onboarding_controller.dart';
 import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
+import 'package:dilalquran/themes/responsive.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/get_navigation.dart';
+import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,9 +19,20 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
-      Get.offAndToNamed(RouteScreen.menu);
-    });
+    _decideNextScreen();
+  }
+
+  Future<void> _decideNextScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seenOnboarding = prefs.getBool(OnboardingController.seenKey) ?? false;
+
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    // First-launch diarahkan ke onboarding, selebihnya langsung ke menu.
+    Get.offAndToNamed(
+      seenOnboarding ? RouteScreen.menu : RouteScreen.onboarding,
+    );
   }
 
   @override
@@ -46,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Text(
               "Dil ~ AlQuran",
               style: dancing700.copyWith(
-                fontSize: 48.0,
+                fontSize: context.scale(48.0),
                 color: ColorApp.white,
                 shadows: [
                   Shadow(
@@ -69,8 +82,8 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 30),
             SizedBox(
-              height: 320.0,
-              width: 320.0,
+              height: (context.screenWidth * 0.72).clamp(200.0, 320.0),
+              width: (context.screenWidth * 0.72).clamp(200.0, 320.0),
               child: Lottie.asset(
                 "assets/lotties/animationReadQuran.json",
                 fit: BoxFit.contain,

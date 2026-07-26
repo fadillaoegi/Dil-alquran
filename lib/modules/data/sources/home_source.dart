@@ -5,41 +5,43 @@ import 'package:dilalquran/config/request_config.dart';
 import 'package:dilalquran/modules/data/models/juz_model.dart';
 import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
 import 'package:dilalquran/modules/data/models/surah_model.dart';
+import 'package:dilalquran/services/offline_store.dart';
 
 class HomeSource {
 
   static Future<List<Surah>> fetchSurah() async {
     try {
       final Map? response = await AppRequest.gets(ApiConfig.surah);
-      if (response == null || response["code"] != 200) return [];
-
-      final List data = response["data"] ?? [];
-      return data.map((e) => Surah.fromJson(e)).toList();
+      if (response != null && response["code"] == 200) {
+        final List data = response["data"] ?? [];
+        final list = data.map((e) => Surah.fromJson(e)).toList();
+        await OfflineStore().saveSurahIndex(list); // cache untuk offline
+        return list;
+      }
     } catch (error) {
       print("Catch from Source fetchSurah: $error");
-      return [];
     }
+    // Fallback: daftar surah yang tersimpan offline.
+    return OfflineStore().readSurahIndex();
   }
 
   static Future<SurahDetail> fetchDetailSurah(String surahNumber) async {
+    final nomor = int.tryParse(surahNumber) ?? 0;
     try {
       String url = "${ApiConfig.baseUrl}/surat/$surahNumber";
-
       Map? resFetchSurahDetail = await AppRequest.gets(url);
 
-      if (resFetchSurahDetail == null) return SurahDetail();
-
-      if (resFetchSurahDetail["code"] == 200) {
-        SurahDetail mapToModel =
-            SurahDetail.fromJson(resFetchSurahDetail["data"]);
-        return mapToModel;
-      } else {
-        return SurahDetail();
+      if (resFetchSurahDetail != null && resFetchSurahDetail["code"] == 200) {
+        final detail = SurahDetail.fromJson(resFetchSurahDetail["data"]);
+        await OfflineStore().saveSurahDetail(detail); // cache untuk offline
+        return detail;
       }
     } catch (error) {
       print("Catch from Source: $error");
-      return SurahDetail();
     }
+    // Fallback: detail surah yang tersimpan offline.
+    final cached = await OfflineStore().readSurahDetail(nomor);
+    return cached ?? SurahDetail();
   }
 
   static List<JuzSummary> buildJuzSummaries(List<Surah> surahList) {

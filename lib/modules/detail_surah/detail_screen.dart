@@ -112,9 +112,20 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
               },
             ),
             Expanded(
-              child: verseItems.isEmpty
-                  ? _emptyState('Gagal memuat detail.', 'Coba buka ulang halaman ini.')
+              child: RefreshIndicator(
+                color: ColorApp.primary,
+                onRefresh: controller.loadDetail,
+                child: verseItems.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        const SizedBox(height: 100),
+                        _emptyState('Gagal memuat detail.',
+                            'Coba buka ulang halaman ini.'),
+                      ],
+                    )
                   : ScrollablePositionedList.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: verseItems.length + 1,
                       itemScrollController: _itemScrollController,
                       itemPositionsListener: _itemPositionsListener,
@@ -153,6 +164,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                         );
                       },
                     ),
+              ),
             ),
           ],
         );

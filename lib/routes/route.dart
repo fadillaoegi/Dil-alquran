@@ -1,10 +1,15 @@
 class RouteScreen {
   static const root = "/DilAlQuran";
-  static String splash = "$root/splash";
-  static String menu = "$root/menu";
-  static String home = "$root/home";
-  static String doa = "$root/doa";
-  static String shalat = "$root/shalat";
-  static String detailDoa = "$root/detailDoa";
-  static String detailSurah = "$root/detailSurah";
+  static const String splash = "$root/splash";
+  static const String onboarding = "$root/onboarding";
+  static const String menu = "$root/menu";
+  static const String home = "$root/home";
+  static const String hafizh = "$root/hafizh";
+  static const String hafizhDetail = "$root/hafizhDetail";
+  static const String hafizhPractice = "$root/hafizhPractice";
+  static const String doa = "$root/doa";
+  static const String shalat = "$root/shalat";
+  static const String shalatNotif = "$root/shalatNotif";
+  static const String detailDoa = "$root/detailDoa";
+  static const String detailSurah = "$root/detailSurah";
 }

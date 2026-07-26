@@ -49,6 +49,8 @@ dependencies:
   geolocator: ^11.0.1
   geocoding: ^3.0.0
   flutter_timezone: ^5.1.0
+  path_provider: ^2.1.4
+  connectivity_plus: ^6.0.5
 
 dev_dependencies:
   flutter_test:
@@ -79,6 +81,7 @@ flutter:
   assets:
     - assets/images/
     - assets/lotties/
+    - assets/notification/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
