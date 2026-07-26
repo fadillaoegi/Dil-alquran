@@ -4,6 +4,7 @@ import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/services/connectivity_service.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
+import 'package:dilalquran/widgets/form_search_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +20,7 @@ class _DoaScreenState extends State<DoaScreen> {
   final DownloadController dl = Get.find<DownloadController>();
   final ConnectivityService conn = Get.find<ConnectivityService>();
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
   static const Color _cardBorderColor = Color(0xFFD3D3D3);
   static const Color _cardBaseShadowColor = Color(0xFFCFCFCF);
   static const double _cardRadius = 18.0;
@@ -37,6 +39,7 @@ class _DoaScreenState extends State<DoaScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -157,19 +160,15 @@ class _DoaScreenState extends State<DoaScreen> {
             if (!online) _buildOfflineBanner(),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: TextField(
+              child: FormSearch(
+                controller: _searchController,
                 onChanged: controller.onSearch,
-                decoration: InputDecoration(
-                  hintText: "Cari doa...",
-                  prefixIcon: const Icon(Icons.search, color: ColorApp.primary),
-                  filled: true,
-                  fillColor: ColorApp.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+                hintText: "Cari doa...",
+                showClearIcon: controller.searchQuery.isNotEmpty,
+                onClear: () {
+                  _searchController.clear();
+                  controller.onSearch("");
+                },
               ),
             ),
             if (doaList.isEmpty)

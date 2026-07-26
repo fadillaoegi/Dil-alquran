@@ -54,7 +54,14 @@ class AppScreen extends StatelessWidget {
                       size: Size(contentWidth, mediaQuery.size.height),
                       textScaler: clampedTextScaler,
                     ),
-                    child: child ?? const SizedBox.shrink(),
+                    // Ketuk di luar form/keyboard -> tutup keyboard.
+                    // Berlaku global untuk SEMUA screen.
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () =>
+                          FocusManager.instance.primaryFocus?.unfocus(),
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),

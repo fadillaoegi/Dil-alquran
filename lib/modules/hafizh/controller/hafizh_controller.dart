@@ -3,6 +3,7 @@ import 'package:dilalquran/modules/data/models/surah_model.dart';
 import 'package:dilalquran/modules/data/sources/home_source.dart';
 import 'package:dilalquran/modules/home/controller/home_controller.dart';
 import 'package:dilalquran/services/notification_service.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,6 +27,37 @@ class HafizhController extends GetxController {
   final activeTab = 0.obs;
   void setTab(int index) => activeTab.value = index;
 
+  // Pencarian surah/juz.
+  final TextEditingController searchController = TextEditingController();
+  final searchQuery = "".obs;
+  void onSearch(String query) => searchQuery.value = query;
+  void clearSearch() {
+    searchController.clear();
+    searchQuery.value = "";
+  }
+
+  List<Surah> get filteredSurah {
+    final query = searchQuery.value.trim().toLowerCase();
+    if (query.isEmpty) return _surahList;
+    return _surahList.where((surah) {
+      final name = (surah.namaLatin ?? "").toLowerCase();
+      final arti = (surah.arti ?? "").toLowerCase();
+      final nomor = (surah.nomor ?? 0).toString();
+      return name.contains(query) || arti.contains(query) || nomor == query;
+    }).toList();
+  }
+
+  List<JuzSummary> get filteredJuz {
+    final query = searchQuery.value.trim().toLowerCase();
+    if (query.isEmpty) return _juzList;
+    return _juzList.where((juz) {
+      final nomor = juz.number.toString();
+      final start = juz.startSurahName.toLowerCase();
+      final end = juz.endSurahName.toLowerCase();
+      return nomor == query || start.contains(query) || end.contains(query);
+    }).toList();
+  }
+
   final _isLoading = true.obs;
   bool get isLoading => _isLoading.value;
 
@@ -46,6 +78,12 @@ class HafizhController extends GetxController {
   void onInit() {
     super.onInit();
     _bootstrap();
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
   }
 
   Future<void> _bootstrap() async {

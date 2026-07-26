@@ -62,54 +62,92 @@ class NotificationService {
         );
   }
 
+  // Detail notifikasi shalat sesuai jenis suara: 'adzan' (bundled),
+  // 'device' (default sistem), atau 'custom' (URI ringtone/suara HP - Android).
+  NotificationDetails _prayerDetails(String soundType, {String? customUri}) {
+    final AndroidNotificationDetails android;
+    final DarwinNotificationDetails ios;
+
+    if (soundType == 'custom' &&
+        customUri != null &&
+        customUri.isNotEmpty) {
+      android = AndroidNotificationDetails(
+        'prayer_channel_custom',
+        'Notifikasi Shalat (Suara HP)',
+        channelDescription:
+            'Pengingat Waktu Shalat dengan suara pilihan dari perangkat',
+        importance: Importance.max,
+        priority: Priority.high,
+        sound: UriAndroidNotificationSound(customUri),
+        playSound: true,
+      );
+      // iOS tidak mendukung file sembarang -> pakai suara default.
+      ios = const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+    } else if (soundType == 'adzan') {
+      android = const AndroidNotificationDetails(
+        'prayer_channel_adzan',
+        'Notifikasi Shalat Adzan',
+        channelDescription: 'Pengingat Waktu Shalat dengan suara Adzan',
+        importance: Importance.max,
+        priority: Priority.high,
+        sound: RawResourceAndroidNotificationSound('adzan'),
+        playSound: true,
+      );
+      ios = const DarwinNotificationDetails(
+        sound: 'adzan.caf',
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+    } else {
+      android = const AndroidNotificationDetails(
+        'prayer_channel_device',
+        'Notifikasi Shalat Sistem',
+        channelDescription: 'Pengingat Waktu Shalat dengan suara perangkat',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+      );
+      ios = const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+    }
+
+    return NotificationDetails(android: android, iOS: ios);
+  }
+
+  // Hapus channel suara custom agar suara baru diterapkan saat dijadwalkan
+  // ulang (channel Android mengunci suaranya saat pertama dibuat).
+  Future<void> deleteCustomChannel() async {
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.deleteNotificationChannel('prayer_channel_custom');
+  }
+
   Future<void> schedulePrayer(
-      int id, String title, String body, DateTime scheduledTime, String soundType) async {
+    int id,
+    String title,
+    String body,
+    DateTime scheduledTime,
+    String soundType, {
+    String? customSoundUri,
+  }) async {
     // Pastikan tidak menjadwalkan di masa lalu
     if (scheduledTime.isBefore(DateTime.now())) return;
-
-    final bool isAdzan = soundType == 'adzan';
-    
-    final AndroidNotificationDetails androidPlatformChannelSpecifics = isAdzan
-        ? const AndroidNotificationDetails(
-            'prayer_channel_adzan',
-            'Notifikasi Shalat Adzan',
-            channelDescription: 'Pengingat Waktu Shalat dengan suara Adzan',
-            importance: Importance.max,
-            priority: Priority.high,
-            sound: RawResourceAndroidNotificationSound('adzan'),
-            playSound: true,
-          )
-        : const AndroidNotificationDetails(
-            'prayer_channel_device',
-            'Notifikasi Shalat Sistem',
-            channelDescription: 'Pengingat Waktu Shalat dengan suara perangkat',
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true,
-          );
-
-    final DarwinNotificationDetails iOSPlatformChannelSpecifics = isAdzan
-        ? const DarwinNotificationDetails(
-            sound: 'adzan.caf',
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          )
-        : const DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       title,
       body,
       tz.TZDateTime.from(scheduledTime, tz.local),
-      NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: iOSPlatformChannelSpecifics,
-      ),
+      _prayerDetails(soundType, customUri: customSoundUri),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
@@ -168,34 +206,15 @@ class NotificationService {
     );
   }
 
-  Future<void> testNotification() async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'prayer_channel_adzan_test',
-      'Test Adzan',
-      channelDescription: 'Pengingat Waktu Shalat dengan suara Adzan',
-      importance: Importance.max,
-      priority: Priority.high,
-      sound: RawResourceAndroidNotificationSound('adzan'),
-      playSound: true,
-    );
-
-    const DarwinNotificationDetails iOSPlatformChannelSpecifics =
-        DarwinNotificationDetails(
-          sound: 'adzan.caf',
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        );
-
+  Future<void> testNotification({
+    String soundType = 'adzan',
+    String? customSoundUri,
+  }) async {
     await flutterLocalNotificationsPlugin.show(
       999,
       'Waktunya Salat (Tes Instan)',
       'Ayo segera dirikan salat!',
-      const NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: iOSPlatformChannelSpecifics,
-      ),
+      _prayerDetails(soundType, customUri: customSoundUri),
     );
   }
 }

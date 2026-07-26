@@ -1,10 +1,14 @@
+import 'package:dilalquran/modules/download/download_controller.dart';
 import 'package:dilalquran/modules/hafizh/controller/hafizh_controller.dart';
 import 'package:dilalquran/routes/route.dart';
+import 'package:dilalquran/services/connectivity_service.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dilalquran/widgets/form_search_widget.dart';
+import 'package:dilalquran/widgets/search_dropdown_widget.dart';
 
 const _hafizhCardBorderColor = Color(0xFFD3D3D3);
 const _hafizhCardBaseShadowColor = Color(0xFFCFCFCF);
@@ -14,6 +18,8 @@ class HafizhScreen extends GetView<HafizhController> {
 
   @override
   Widget build(BuildContext context) {
+    final dl = Get.find<DownloadController>();
+    final conn = Get.find<ConnectivityService>();
     return Scaffold(
       backgroundColor: ColorApp.secondary,
       appBar: AppBar(
@@ -47,9 +53,24 @@ class HafizhScreen extends GetView<HafizhController> {
           );
         }
 
+        final online = conn.isOnline.value;
         final isJuz = controller.activeTab.value == 1;
-        final listLength =
-            isJuz ? controller.juzList.length : controller.surahList.length;
+
+        // Basis: hasil pencarian. Saat offline, saring lagi ke yang sudah
+        // diunduh (dari Home) agar bisa dipakai offline.
+        final baseSurah = controller.filteredSurah;
+        final baseJuz = controller.filteredJuz;
+        final surahList = online
+            ? baseSurah
+            : baseSurah
+                .where((s) => dl.isSurahDownloaded(s.nomor ?? -1))
+                .toList();
+        final juzList = online
+            ? baseJuz
+            : baseJuz.where((j) => dl.isJuzDownloaded(j.number)).toList();
+
+        final listLength = isJuz ? juzList.length : surahList.length;
+        final searching = controller.searchQuery.value.trim().isNotEmpty;
 
         return RefreshIndicator(
           color: ColorApp.primary,
@@ -62,14 +83,27 @@ class HafizhScreen extends GetView<HafizhController> {
               if (index == 0) {
                 return Column(
                   children: [
+                    if (!online) _buildOfflineBanner(),
                     _buildProgressHeader(),
                     _buildTabSelector(),
+                    FormSearch(
+                      controller: controller.searchController,
+                      onChanged: controller.onSearch,
+                      hintText: isJuz
+                          ? "Cari nomor juz atau nama surah..."
+                          : "Cari nomor atau nama surah...",
+                      showClearIcon: searching,
+                      onClear: controller.clearSearch,
+                    ),
+                    if (!online && listLength == 0) _buildOfflineEmpty(),
+                    if (online && searching && listLength == 0)
+                      _buildNotFound(),
                   ],
                 );
               }
 
               if (isJuz) {
-                final juz = controller.juzList[index - 1];
+                final juz = juzList[index - 1];
                 return _JuzProgressTile(
                   number: juz.number,
                   startSurahName: juz.startSurahName,
@@ -89,7 +123,7 @@ class HafizhScreen extends GetView<HafizhController> {
                 );
               }
 
-              final surah = controller.surahList[index - 1];
+              final surah = surahList[index - 1];
               return _SurahProgressTile(
                 nomor: surah.nomor ?? 0,
                 namaLatin: surah.namaLatin ?? "-",
@@ -113,62 +147,190 @@ class HafizhScreen extends GetView<HafizhController> {
     );
   }
 
+  Widget _buildOfflineBanner() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+      decoration: BoxDecoration(
+        color: ColorApp.black.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.wifi_off_rounded, color: ColorApp.white, size: 16.0),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Text(
+              "Mode offline — menampilkan surah/juz yang sudah diunduh.",
+              style: white400.copyWith(fontSize: 12.0),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotFound() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40.0),
+      child: Column(
+        children: [
+          Icon(Icons.search_off_rounded,
+              size: 56.0, color: ColorApp.primary.withValues(alpha: 0.4)),
+          const SizedBox(height: 12.0),
+          Text(
+            "Tidak ditemukan",
+            style: black600.copyWith(fontSize: 14.0),
+          ),
+          const SizedBox(height: 4.0),
+          Text(
+            "Coba kata kunci atau nomor lain.",
+            textAlign: TextAlign.center,
+            style: black400.copyWith(
+              fontSize: 12.0,
+              color: ColorApp.black.withValues(alpha: 0.55),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOfflineEmpty() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40.0),
+      child: Column(
+        children: [
+          Icon(Icons.download_for_offline_outlined,
+              size: 56.0, color: ColorApp.primary.withValues(alpha: 0.4)),
+          const SizedBox(height: 12.0),
+          Text(
+            "Belum ada surah/juz yang diunduh",
+            style: black600.copyWith(fontSize: 14.0),
+          ),
+          const SizedBox(height: 4.0),
+          Text(
+            "Unduh dari halaman Al-Quran untuk dipakai offline di sini.",
+            textAlign: TextAlign.center,
+            style: black400.copyWith(
+              fontSize: 12.0,
+              color: ColorApp.black.withValues(alpha: 0.55),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Sub-card "chunky" ala kreate.gg di atas kartu putih:
+  // fill hijau sangat tipis + border tegas + hard offset shadow (3D).
+  BoxDecoration _chunkyTile() {
+    return BoxDecoration(
+      color: ColorApp.primary.withValues(alpha: 0.05),
+      borderRadius: BorderRadius.circular(16.0),
+      border: Border.all(
+        color: ColorApp.primary.withValues(alpha: 0.14),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: ColorApp.primary.withValues(alpha: 0.13),
+          offset: const Offset(0, 3),
+          blurRadius: 0,
+        ),
+      ],
+    );
+  }
+
   Widget _buildProgressHeader() {
     return Obx(() {
       final progress = controller.overallProgress;
       final percent = (progress * 100).toStringAsFixed(1);
 
       return Container(
-        margin: const EdgeInsets.only(bottom: 20.0),
-        padding: const EdgeInsets.all(20.0),
+        margin: const EdgeInsets.only(bottom: 22.0),
+        padding: const EdgeInsets.all(22.0),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xff10553a), Color(0xff34b57e)],
-          ),
+          color: ColorApp.white,
           borderRadius: BorderRadius.circular(24.0),
+          border: Border.all(
+            color: ColorApp.primary.withValues(alpha: 0.10),
+            width: 1.5,
+          ),
           boxShadow: [
+            // Hard offset shadow hijau — gaya chunky 3D (kreate.gg).
             BoxShadow(
-              color: ColorApp.primary.withValues(alpha: 0.3),
-              blurRadius: 16.0,
+              color: ColorApp.primary.withValues(alpha: 0.18),
               offset: const Offset(0, 6),
+              blurRadius: 0,
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Progress Hafalan", style: white600.copyWith(fontSize: 14.0)),
-            const SizedBox(height: 8.0),
+            // Eyebrow: titik aksen + uppercase tracking lebar.
+            Row(
+              children: [
+                Container(
+                  width: 7.0,
+                  height: 7.0,
+                  decoration: const BoxDecoration(
+                    color: ColorApp.accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                Text(
+                  "PROGRESS HAFALAN",
+                  style: primary700.copyWith(
+                    fontSize: 11.0,
+                    letterSpacing: 1.8,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14.0),
+            // Angka display besar, super-tebal, tracking rapat.
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text("$percent%", style: white700.copyWith(fontSize: 34.0)),
-                const SizedBox(width: 8.0),
+                Text(
+                  "$percent%",
+                  style: const TextStyle(
+                    color: ColorApp.primary,
+                    fontSize: 46.0,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.8,
+                    height: 1.0,
+                  ),
+                ),
+                const SizedBox(width: 10.0),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 6.0),
+                  padding: const EdgeInsets.only(bottom: 8.0),
                   child: Text(
                     "dari Al-Quran",
-                    style: white400.copyWith(
-                      fontSize: 12.0,
-                      color: ColorApp.white.withValues(alpha: 0.85),
+                    style: black500.copyWith(
+                      fontSize: 13.0,
+                      color: ColorApp.black.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12.0),
+            const SizedBox(height: 18.0),
             ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(999.0),
               child: LinearProgressIndicator(
                 value: progress,
-                minHeight: 8.0,
-                backgroundColor: ColorApp.white.withValues(alpha: 0.25),
-                valueColor: const AlwaysStoppedAnimation<Color>(ColorApp.white),
+                minHeight: 10.0,
+                backgroundColor: ColorApp.primary.withValues(alpha: 0.12),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(ColorApp.primary),
               ),
             ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 18.0),
             _buildStreakBanner(),
             const SizedBox(height: 12.0),
             Row(
@@ -195,25 +357,38 @@ class HafizhScreen extends GetView<HafizhController> {
   Widget _statBox(String value, String label, IconData icon) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-        decoration: BoxDecoration(
-          color: ColorApp.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(14.0),
-        ),
+        padding: const EdgeInsets.all(14.0),
+        decoration: _chunkyTile(),
         child: Row(
           children: [
-            Icon(icon, color: ColorApp.white, size: 22.0),
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: ColorApp.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              child: Icon(icon, color: ColorApp.primary, size: 18.0),
+            ),
             const SizedBox(width: 10.0),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(value, style: white700.copyWith(fontSize: 18.0)),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      color: ColorApp.black,
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 1.0),
                   Text(
                     label,
-                    style: white400.copyWith(
-                      fontSize: 11.0,
-                      color: ColorApp.white.withValues(alpha: 0.85),
+                    style: black500.copyWith(
+                      fontSize: 10.5,
+                      color: ColorApp.black.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -228,26 +403,31 @@ class HafizhScreen extends GetView<HafizhController> {
   Widget _buildStreakBanner() {
     final streak = controller.currentStreak;
     return Container(
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: ColorApp.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(14.0),
-      ),
+      padding: const EdgeInsets.all(14.0),
+      decoration: _chunkyTile(),
       child: Row(
         children: [
+          // Chip aksen vivid dengan hard shadow-nya sendiri (kreate.gg).
           Container(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(10.0),
             decoration: BoxDecoration(
-              color: ColorApp.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
+              color: ColorApp.accent,
+              borderRadius: BorderRadius.circular(12.0),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xff148a51),
+                  offset: Offset(0, 3),
+                  blurRadius: 0,
+                ),
+              ],
             ),
             child: const Icon(
               Icons.local_fire_department_rounded,
               color: ColorApp.white,
-              size: 22.0,
+              size: 20.0,
             ),
           ),
-          const SizedBox(width: 12.0),
+          const SizedBox(width: 14.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,14 +436,18 @@ class HafizhScreen extends GetView<HafizhController> {
                   streak > 0
                       ? "$streak hari beruntun"
                       : "Mulai streak-mu hari ini",
-                  style: white700.copyWith(fontSize: 15.0),
+                  style: black700.copyWith(
+                    fontSize: 15.0,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
                 ),
-                const SizedBox(height: 2.0),
+                const SizedBox(height: 3.0),
                 Text(
                   "Terpanjang ${controller.longestStreak} hari · ${controller.totalActiveDays} hari aktif",
-                  style: white400.copyWith(
+                  style: black500.copyWith(
                     fontSize: 11.0,
-                    color: ColorApp.white.withValues(alpha: 0.85),
+                    color: ColorApp.black.withValues(alpha: 0.55),
                   ),
                 ),
               ],
@@ -908,30 +1092,16 @@ class _AyatDropdown extends StatelessWidget {
       children: [
         Text(label, style: black500.copyWith(fontSize: 12.5)),
         const SizedBox(height: 8.0),
-        DropdownButtonFormField<int>(
-          initialValue: value,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: ColorApp.secondary,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14.0,
-              vertical: 12.0,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14.0),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          items: options
-              .map(
-                (item) => DropdownMenuItem<int>(
-                  value: item,
-                  child: Text("Ayat $item"),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value != null) onChanged(value);
+        SearchDropdown(
+          hintText: "Pilih ayat",
+          selectedValue: "Ayat $value",
+          items: options.map((item) => "Ayat $item").toList(),
+          emptyText: "Ayat tidak ditemukan",
+          onSelected: (val) {
+            final parsedValue = int.tryParse(val.replaceAll("Ayat ", ""));
+            if (parsedValue != null) {
+              onChanged(parsedValue);
+            }
           },
         ),
       ],

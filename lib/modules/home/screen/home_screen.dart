@@ -5,6 +5,7 @@ import 'package:dilalquran/services/connectivity_service.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:dilalquran/widgets/list_surahayat_widget.dart';
+import 'package:dilalquran/widgets/form_search_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -30,15 +31,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: ColorApp.secondary,
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
         backgroundColor: ColorApp.primary,
         title: Text(
-          "Dil ~ AlQuran",
+          "AlQuran",
           style: dancing700.copyWith(
-            fontSize: 28.0,
+            fontSize: 20.0,
             color: ColorApp.white,
           ),
         ),
@@ -136,45 +138,19 @@ class _HomeScreenState extends State<HomeScreen> {
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: TextField(
+              child: FormSearch(
                 controller: searchTextController,
                 onChanged: (val) {
                   controller.searchQ.value = val;
                 },
-                style: black500.copyWith(fontSize: 14.0),
-                decoration: InputDecoration(
-                  hintText: isSurah
-                      ? "Cari nomor atau nama surah..."
-                      : "Cari nomor juz atau nama surah pembuka...",
-                  hintStyle: black400.copyWith(
-                    color: ColorApp.black.withValues(alpha: 0.4),
-                    fontSize: 13.5,
-                  ),
-                  prefixIcon:
-                      const Icon(Icons.search_rounded, color: ColorApp.primary),
-                  suffixIcon: controller.searchQ.value.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded,
-                              color: ColorApp.primary),
-                          onPressed: () {
-                            searchTextController.clear();
-                            controller.searchQ.value = "";
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: ColorApp.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14.0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                    borderSide:
-                        const BorderSide(color: ColorApp.primary, width: 1.5),
-                  ),
-                ),
+                hintText: isSurah
+                    ? "Cari nomor atau nama surah..."
+                    : "Cari nomor juz atau nama surah pembuka...",
+                showClearIcon: controller.searchQ.value.isNotEmpty,
+                onClear: () {
+                  searchTextController.clear();
+                  controller.searchQ.value = "";
+                },
               ),
             ),
             Expanded(

@@ -1,6 +1,7 @@
 import 'package:dilalquran/modules/data/sources/shalat_source.dart';
 import 'package:dilalquran/modules/shalat/model/shalat_model.dart';
 import 'package:dilalquran/services/notification_service.dart';
+import 'package:dilalquran/services/ringtone_picker.dart';
 import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -25,7 +26,11 @@ class ShalatController extends GetxController {
   final RxBool isDetectingLocation = false.obs;
 
   final RxBool isNotificationEnabled = false.obs;
+  // 'adzan' | 'device' | 'custom'
   final RxString notificationSound = "adzan".obs;
+  // Suara pilihan dari HP (ringtone/MP3) untuk soundType 'custom'.
+  final RxString customSoundUri = "".obs;
+  final RxString customSoundTitle = "".obs;
 
   // Waktu sholat yang bisa dinotifikasi (Imsak/Dhuha/Terbit tidak termasuk).
   static const List<String> prayerNames = [
@@ -55,6 +60,8 @@ class ShalatController extends GetxController {
     selectedKabKota.value = prefs.getString('saved_kabkota') ?? "";
     isNotificationEnabled.value = prefs.getBool('notif_shalat') ?? false;
     notificationSound.value = prefs.getString('notif_sound') ?? "adzan";
+    customSoundUri.value = prefs.getString('notif_custom_uri') ?? "";
+    customSoundTitle.value = prefs.getString('notif_custom_title') ?? "";
 
     // Jika belum pernah disimpan, biarkan default (semua aktif).
     final savedPrayers = prefs.getStringList('notif_prayers');
@@ -71,6 +78,8 @@ class ShalatController extends GetxController {
     await prefs.setString('saved_kabkota', selectedKabKota.value);
     await prefs.setBool('notif_shalat', isNotificationEnabled.value);
     await prefs.setString('notif_sound', notificationSound.value);
+    await prefs.setString('notif_custom_uri', customSoundUri.value);
+    await prefs.setString('notif_custom_title', customSoundTitle.value);
 
     final enabledList =
         prayerNames.where((prayer) => enabledPrayers[prayer] == true).toList();
@@ -323,6 +332,32 @@ class ShalatController extends GetxController {
     }
   }
 
+  // Buka pemilih ringtone/suara HP (Android). Bila berhasil, set sebagai custom.
+  Future<void> pickCustomSound() async {
+    final picked = await RingtonePicker.pick(
+      currentUri: customSoundUri.value.isEmpty ? null : customSoundUri.value,
+    );
+    if (picked == null) return; // dibatalkan / tidak didukung
+
+    customSoundUri.value = picked.uri;
+    customSoundTitle.value = picked.title;
+    notificationSound.value = 'custom';
+    // Hapus channel lama agar suara baru benar-benar dipakai.
+    await _notificationService.deleteCustomChannel();
+    _savePreferences();
+    if (isNotificationEnabled.value) {
+      _scheduleAllNotifications();
+    }
+  }
+
+  // Coba bunyikan notifikasi sesuai suara terpilih.
+  Future<void> testNotificationSound() async {
+    await _notificationService.testNotification(
+      soundType: notificationSound.value,
+      customSoundUri: customSoundUri.value,
+    );
+  }
+
   // Aktif/nonaktifkan notifikasi untuk satu waktu sholat tertentu.
   Future<void> togglePrayer(String prayer, bool value) async {
     enabledPrayers[prayer] = value;
@@ -336,8 +371,18 @@ class ShalatController extends GetxController {
   int get enabledPrayerCount =>
       prayerNames.where((prayer) => enabledPrayers[prayer] == true).length;
 
-  String get soundLabel =>
-      notificationSound.value == 'adzan' ? "Adzan" : "Suara Sistem";
+  String get soundLabel {
+    switch (notificationSound.value) {
+      case 'adzan':
+        return "Adzan";
+      case 'custom':
+        return customSoundTitle.value.isNotEmpty
+            ? customSoundTitle.value
+            : "Suara HP";
+      default:
+        return "Suara Sistem";
+    }
+  }
 
   String get locationLabel {
     final kota = selectedKabKota.value.trim();
@@ -423,6 +468,7 @@ class ShalatController extends GetxController {
               "Telah masuk waktu shalat ${entry.key} untuk wilayah ${selectedKabKota.value}.",
               dt,
               notificationSound.value,
+              customSoundUri: customSoundUri.value,
             );
           }
         } catch (e) {

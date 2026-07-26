@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:dilalquran/modules/shalat/controller/shalat_controller.dart';
-import 'package:dilalquran/services/notification_service.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
@@ -218,6 +219,20 @@ class ShalatNotifScreen extends GetView<ShalatController> {
             value: "device",
             icon: Icons.notifications_rounded,
           ),
+          // Pilih ringtone/MP3 dari HP — hanya Android.
+          if (Platform.isAndroid) ...[
+            const SizedBox(height: 10.0),
+            _soundOption(
+              title: "Suara dari HP",
+              subtitle: controller.notificationSound.value == 'custom' &&
+                      controller.customSoundTitle.value.isNotEmpty
+                  ? controller.customSoundTitle.value
+                  : "Pilih ringtone atau suara di perangkat",
+              value: "custom",
+              icon: Icons.library_music_rounded,
+              onTap: controller.pickCustomSound,
+            ),
+          ],
         ],
       ),
     );
@@ -228,10 +243,11 @@ class ShalatNotifScreen extends GetView<ShalatController> {
     required String subtitle,
     required String value,
     required IconData icon,
+    VoidCallback? onTap,
   }) {
     final selected = controller.notificationSound.value == value;
     return GestureDetector(
-      onTap: () => controller.changeNotificationSound(value),
+      onTap: onTap ?? () => controller.changeNotificationSound(value),
       child: Container(
         padding: const EdgeInsets.all(14.0),
         decoration: BoxDecoration(
@@ -263,6 +279,8 @@ class ShalatNotifScreen extends GetView<ShalatController> {
                   const SizedBox(height: 2.0),
                   Text(
                     subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: black400.copyWith(
                       fontSize: 12.0,
                       color: ColorApp.black.withValues(alpha: 0.55),
@@ -289,7 +307,7 @@ class ShalatNotifScreen extends GetView<ShalatController> {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: () => NotificationService().testNotification(),
+        onPressed: controller.testNotificationSound,
         icon: const Icon(Icons.volume_up_rounded, size: 18.0),
         label: const Text("Coba Notifikasi Sekarang"),
         style: OutlinedButton.styleFrom(
