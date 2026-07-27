@@ -41,7 +41,38 @@ class NotificationService {
         // Handle notification tap
       },
     );
+
+    await _ensureAndroidChannels();
   }
+
+  // Channel Android mengunci suaranya saat pertama dibuat. Jika channel adzan
+  // lama sudah terbuat dengan konfigurasi/suara yang salah (mis. dari build
+  // sebelumnya), suara adzan tidak akan bunyi. Maka: hapus channel lama dan
+  // buat channel dengan ID baru + suara adzan yang benar.
+  Future<void> _ensureAndroidChannels() async {
+    final android = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+
+    // Bersihkan channel adzan lama yang mungkin ter-cache dengan suara salah.
+    await android.deleteNotificationChannel('prayer_channel_adzan');
+    await android.deleteNotificationChannel('prayer_channel_adzan_test');
+
+    await android.createNotificationChannel(
+      const AndroidNotificationChannel(
+        adzanChannelId,
+        'Notifikasi Shalat Adzan',
+        description: 'Pengingat Waktu Shalat dengan suara Adzan',
+        importance: Importance.max,
+        sound: RawResourceAndroidNotificationSound('adzan'),
+        playSound: true,
+      ),
+    );
+  }
+
+  // ID channel adzan (versi baru agar suara adzan pasti terpasang di device).
+  static const String adzanChannelId = 'prayer_channel_adzan_v2';
 
   Future<void> requestPermissions() async {
     // Android 13+: izin menampilkan notifikasi + izin exact alarm (Android 12+)
@@ -89,7 +120,7 @@ class NotificationService {
       );
     } else if (soundType == 'adzan') {
       android = const AndroidNotificationDetails(
-        'prayer_channel_adzan',
+        adzanChannelId,
         'Notifikasi Shalat Adzan',
         channelDescription: 'Pengingat Waktu Shalat dengan suara Adzan',
         importance: Importance.max,
@@ -139,19 +170,54 @@ class NotificationService {
     String soundType, {
     String? customSoundUri,
   }) async {
-    // Pastikan tidak menjadwalkan di masa lalu
-    if (scheduledTime.isBefore(DateTime.now())) return;
-
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      _prayerDetails(soundType, customUri: customSoundUri),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+    // Bangun waktu tepat pada zona lokal berdasarkan komponen wall-clock
+    // (bukan konversi instant via TZDateTime.from), agar tidak salah zona.
+    final scheduled = tz.TZDateTime(
+      tz.local,
+      scheduledTime.year,
+      scheduledTime.month,
+      scheduledTime.day,
+      scheduledTime.hour,
+      scheduledTime.minute,
+      scheduledTime.second,
     );
+
+    // Jangan jadwalkan waktu yang sudah lewat (dibandingkan pada zona yang
+    // sama), agar notifikasi tidak langsung muncul dini.
+    if (!scheduled.isAfter(tz.TZDateTime.now(tz.local))) return;
+
+    final details = _prayerDetails(soundType, customUri: customSoundUri);
+
+    try {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduled,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (_) {
+      // Fallback: bila exact alarm tidak diizinkan OS/perangkat, jadwalkan
+      // mode inexact agar notifikasi tetap muncul (mungkin telat beberapa
+      // menit) — lebih baik daripada tidak muncul sama sekali.
+      try {
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          id,
+          title,
+          body,
+          scheduled,
+          details,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+      } catch (_) {
+        // Abaikan; jadwal ini gagal dibuat.
+      }
+    }
   }
 
   Future<void> cancelAll() async {

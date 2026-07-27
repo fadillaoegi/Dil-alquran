@@ -8,6 +8,7 @@ class RouteScreen {
   static const String hafizhDetail = "$root/hafizhDetail";
   static const String hafizhPractice = "$root/hafizhPractice";
   static const String doa = "$root/doa";
+  static const String dzikir = "$root/dzikir";
   static const String shalat = "$root/shalat";
   static const String shalatNotif = "$root/shalatNotif";
   static const String detailDoa = "$root/detailDoa";

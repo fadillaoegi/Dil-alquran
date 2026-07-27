@@ -27,6 +27,7 @@ class _CardMenuState extends State<CardMenu> {
   bool _pressed = false;
 
   void _setPressed(bool value) {
+    if (!mounted) return;
     if (_pressed != value) {
       setState(() => _pressed = value);
     }

@@ -144,7 +144,23 @@ class _MenuScreenState extends State<MenuScreen>
               ),
             ),
             _FadeSlideIn(
-              animation: _interval(0.56, 1.0),
+              animation: _interval(0.56, 0.93),
+              child: CardMenu(
+                title: "Dzikir",
+                subtitle: "Dzikir harian & setelah ibadah",
+                icon: Icons.brightness_5_rounded,
+                gradientColors: const [
+                  Color(0xff0f4630),
+                  ColorApp.primary,
+                  Color(0xff6bc58f),
+                ],
+                onTap: () {
+                  Get.toNamed(RouteScreen.dzikir);
+                },
+              ),
+            ),
+            _FadeSlideIn(
+              animation: _interval(0.68, 1.0),
               child: CardMenu(
                 title: "Jadwal Sholat",
                 subtitle: "Waktu sholat akurat",

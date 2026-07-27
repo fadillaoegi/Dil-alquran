@@ -1,0 +1,204 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "grup": "Setelah Sholat",
+      "nama": "Istighfar",
+      "ar": "أَسْتَغْفِرُ اللَّهَ",
+      "tr": "Astaghfirullah",
+      "idn": "Aku memohon ampun kepada Allah.",
+      "faedah": "Dibaca 3 kali setelah salam untuk memohon ampunan atas kekurangan dalam sholat.",
+      "jumlah": 3
+    },
+    {
+      "id": 2,
+      "grup": "Setelah Sholat",
+      "nama": "Doa Keselamatan",
+      "ar": "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ",
+      "tr": "Allahumma antas-salaam wa minkas-salaam, tabaarakta yaa dzal-jalaali wal-ikraam",
+      "idn": "Ya Allah, Engkau adalah keselamatan dan dari-Mu keselamatan. Maha Suci Engkau, wahai Rabb Pemilik keagungan dan kemuliaan.",
+      "faedah": "Dibaca sekali setelah istighfar seusai sholat fardhu.",
+      "jumlah": 1
+    },
+    {
+      "id": 3,
+      "grup": "Setelah Sholat",
+      "nama": "Tasbih",
+      "ar": "سُبْحَانَ اللَّهِ",
+      "tr": "Subhaanallah",
+      "idn": "Maha Suci Allah.",
+      "faedah": "Dibaca 33 kali setelah sholat fardhu.",
+      "jumlah": 33
+    },
+    {
+      "id": 4,
+      "grup": "Setelah Sholat",
+      "nama": "Tahmid",
+      "ar": "الْحَمْدُ لِلَّهِ",
+      "tr": "Alhamdulillah",
+      "idn": "Segala puji bagi Allah.",
+      "faedah": "Dibaca 33 kali setelah sholat fardhu.",
+      "jumlah": 33
+    },
+    {
+      "id": 5,
+      "grup": "Setelah Sholat",
+      "nama": "Takbir",
+      "ar": "اللَّهُ أَكْبَرُ",
+      "tr": "Allahu akbar",
+      "idn": "Allah Maha Besar.",
+      "faedah": "Dibaca 33 kali setelah sholat fardhu.",
+      "jumlah": 33
+    },
+    {
+      "id": 6,
+      "grup": "Setelah Sholat",
+      "nama": "Tahlil",
+      "ar": "لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ",
+      "tr": "Laa ilaaha illallahu wahdahu laa syariika lah, lahul-mulku wa lahul-hamdu wa huwa 'alaa kulli syai-in qadiir",
+      "idn": "Tidak ada Tuhan yang berhak disembah selain Allah semata, tiada sekutu bagi-Nya. Milik-Nya segala kerajaan dan segala pujian, dan Dia Maha Kuasa atas segala sesuatu.",
+      "faedah": "Melengkapi bilangan dzikir menjadi 100 setelah sholat fardhu.",
+      "jumlah": 1
+    },
+    {
+      "id": 7,
+      "grup": "Pagi & Petang",
+      "nama": "Ayat Kursi",
+      "ar": "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ، لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ",
+      "tr": "Allahu laa ilaaha illaa huwal-hayyul-qayyuum, laa ta'khudzuhu sinatuw wa laa naum",
+      "idn": "Allah, tidak ada Tuhan selain Dia Yang Maha Hidup lagi Maha Berdiri sendiri; tidak mengantuk dan tidak tidur.",
+      "faedah": "Barang siapa membacanya pada pagi dan petang, ia dijaga hingga waktu berikutnya.",
+      "jumlah": 1
+    },
+    {
+      "id": 8,
+      "grup": "Pagi & Petang",
+      "nama": "Sayyidul Istighfar",
+      "ar": "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَىٰ عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ",
+      "tr": "Allahumma anta rabbii laa ilaaha illaa anta, khalaqtanii wa anaa 'abduka, wa anaa 'alaa 'ahdika wa wa'dika mastatha'tu",
+      "idn": "Ya Allah, Engkau Rabb-ku, tidak ada Tuhan selain Engkau. Engkau menciptakanku dan aku adalah hamba-Mu, aku menepati janji-Mu semampuku.",
+      "faedah": "Penghulu istighfar; siapa membacanya dengan yakin di pagi hari lalu wafat, ia masuk surga.",
+      "jumlah": 1
+    },
+    {
+      "id": 9,
+      "grup": "Pagi & Petang",
+      "nama": "Perlindungan dari Bahaya",
+      "ar": "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
+      "tr": "Bismillaahil-ladzii laa yadhurru ma'asmihi syai-un fil-ardhi wa laa fis-samaa-i wa huwas-samii'ul-'aliim",
+      "idn": "Dengan nama Allah yang bersama nama-Nya tidak ada sesuatu pun yang membahayakan, baik di bumi maupun di langit, dan Dia Maha Mendengar lagi Maha Mengetahui.",
+      "faedah": "Dibaca 3 kali; siapa membacanya tidak akan tertimpa bahaya mendadak.",
+      "jumlah": 3
+    },
+    {
+      "id": 10,
+      "grup": "Pagi & Petang",
+      "nama": "Ridha kepada Allah",
+      "ar": "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا",
+      "tr": "Radhiitu billaahi rabbaa, wa bil-islaami diinaa, wa bimuhammadin shallallahu 'alaihi wa sallama nabiyyaa",
+      "idn": "Aku ridha Allah sebagai Rabb, Islam sebagai agama, dan Muhammad shallallahu 'alaihi wa sallam sebagai nabi.",
+      "faedah": "Dibaca 3 kali; Allah berjanji akan meridhainya pada hari kiamat.",
+      "jumlah": 3
+    },
+    {
+      "id": 11,
+      "grup": "Pagi & Petang",
+      "nama": "Surah Al-Ikhlas",
+      "ar": "قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ",
+      "tr": "Qul huwallahu ahad. Allahush-shamad. Lam yalid wa lam yuulad. Wa lam yakul lahu kufuwan ahad.",
+      "idn": "Katakanlah: Dialah Allah Yang Maha Esa. Allah tempat meminta segala sesuatu. Dia tidak beranak dan tidak diperanakkan. Dan tidak ada sesuatu pun yang setara dengan-Nya.",
+      "faedah": "Dibaca 3 kali pagi dan petang sebagai dzikir perlindungan bersama Al-Falaq dan An-Nas.",
+      "jumlah": 3
+    },
+    {
+      "id": 12,
+      "grup": "Pagi & Petang",
+      "nama": "Surah Al-Falaq",
+      "ar": "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۝ مِنْ شَرِّ مَا خَلَقَ ۝ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۝ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ",
+      "tr": "Qul a'uudzu birabbil-falaq. Min syarri maa khalaq. Wa min syarri ghaasiqin idzaa waqab. Wa min syarrin-naffaatsaati fil-'uqad. Wa min syarri haasidin idzaa hasad.",
+      "idn": "Katakanlah: Aku berlindung kepada Rabb yang menguasai subuh, dari kejahatan makhluk-Nya, dari kejahatan malam apabila telah gelap gulita, dari kejahatan para penyihir yang meniup pada buhul-buhul, dan dari kejahatan orang yang dengki apabila dia dengki.",
+      "faedah": "Dibaca 3 kali pagi dan petang sebagai dzikir perlindungan bersama Al-Ikhlas dan An-Nas.",
+      "jumlah": 3
+    },
+    {
+      "id": 13,
+      "grup": "Pagi & Petang",
+      "nama": "Surah An-Nas",
+      "ar": "قُلْ أَعُوذُ بِرَبِّ النَّاسِ ۝ مَلِكِ النَّاسِ ۝ إِلَٰهِ النَّاسِ ۝ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۝ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۝ مِنَ الْجِنَّةِ وَالنَّاسِ",
+      "tr": "Qul a'uudzu birabbin-naas. Malikin-naas. Ilaahin-naas. Min syarril-waswaasil-khannas. Alladzii yuwaswisu fii shuduurin-naas. Minal-jinnati wan-naas.",
+      "idn": "Katakanlah: Aku berlindung kepada Rabb manusia, Raja manusia, Sembahan manusia, dari kejahatan bisikan setan yang bersembunyi, yang membisikkan ke dalam dada manusia, dari golongan jin dan manusia.",
+      "faedah": "Dibaca 3 kali pagi dan petang sebagai dzikir perlindungan bersama Al-Ikhlas dan Al-Falaq.",
+      "jumlah": 3
+    },
+    {
+      "id": 14,
+      "grup": "Pagi",
+      "nama": "Doa Memasuki Pagi",
+      "ar": "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ",
+      "tr": "Allahumma bika ashbahnaa, wa bika amsainaa, wa bika nahyaa, wa bika namuutu, wa ilaikan-nusyuur.",
+      "idn": "Ya Allah, dengan-Mu kami berada di waktu pagi, dengan-Mu kami berada di waktu petang, dengan-Mu kami hidup, dengan-Mu kami mati, dan kepada-Mu kebangkitan.",
+      "faedah": "Dibaca 1 kali pada pagi hari sebagai pengingat bahwa hidup, mati, dan kebangkitan hanya kepada Allah.",
+      "jumlah": 1
+    },
+    {
+      "id": 15,
+      "grup": "Pagi",
+      "nama": "Tahlil Pagi",
+      "ar": "لَا إِلٰهَ إِلَّا اللَّهُ وَحْدَهُ، لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ، وَلَهُ الْحَمْدُ، وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ",
+      "tr": "Laa ilaaha illallaahu wahdahu, laa syariika lah, lahul-mulku wa lahul-hamdu, wa huwa 'alaa kulli syai-in qadiir.",
+      "idn": "Tidak ada sesembahan yang berhak disembah selain Allah semata, tidak ada sekutu bagi-Nya. Milik-Nya kerajaan, milik-Nya segala puji, dan Dia Mahakuasa atas segala sesuatu.",
+      "faedah": "Dibaca pada pagi hari sebagai pujian dan pengagungan kepada Allah.",
+      "jumlah": 1
+    },
+    {
+      "id": 16,
+      "grup": "Pagi & Petang",
+      "nama": "Ya Hayyu Ya Qayyum",
+      "ar": "يَا حَيُّ يَا قَيُّومُ، بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ، وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
+      "tr": "Yaa hayyu yaa qayyuum, birahmatika astaghiits, ashlih lii sya'nii kullahu, wa laa takilnii ilaa nafsii tharfata 'ain.",
+      "idn": "Wahai Yang Mahahidup, wahai Yang Maha Berdiri sendiri, dengan rahmat-Mu aku memohon pertolongan. Perbaikilah seluruh urusanku, dan jangan serahkan aku kepada diriku sendiri walau sekejap mata.",
+      "faedah": "Dibaca pagi dan petang untuk memohon pertolongan serta perbaikan seluruh urusan.",
+      "jumlah": 1
+    },
+    {
+      "id": 17,
+      "grup": "Pagi & Petang",
+      "nama": "Doa Afiat Dunia Akhirat",
+      "ar": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي، اللَّهُمَّ اسْتُرْ عَوْرَاتِي وَآمِنْ رَوْعَاتِي، وَاحْفَظْنِي مِنْ بَيْنِ يَدَيَّ وَمِنْ خَلْفِي وَعَنْ يَمِينِي وَعَنْ شِمَالِي وَمِنْ فَوْقِي، وَأَعُوذُ بِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي",
+      "tr": "Allahumma innii as-alukal-'afwa wal-'aafiyata fid-dunyaa wal-aakhirah, Allahumma innii as-alukal-'afwa wal-'aafiyata fii diinii wa dunyaaya wa ahlii wa maalii, Allahummastur 'auraatii wa aamin rau'aatii, wahfazhnii min baini yadayya wa min khalfii wa 'an yamiinii wa 'an syimaalii wa min fauqii, wa a'uudzu bika an ughtaala min tahtii.",
+      "idn": "Ya Allah, aku memohon ampunan dan keselamatan di dunia dan akhirat. Ya Allah, aku memohon ampunan dan keselamatan dalam agamaku, duniaku, keluargaku, dan hartaku. Ya Allah, tutupilah aib-aibku, tentramkan ketakutanku, dan jagalah aku dari segala arah. Aku berlindung kepada-Mu agar tidak diserang dari bawahku.",
+      "faedah": "Dibaca pagi dan petang untuk memohon perlindungan, keamanan, serta afiat lahir dan batin.",
+      "jumlah": 1
+    },
+    {
+      "id": 18,
+      "grup": "Petang",
+      "nama": "Subhanallahi Wabihamdihi",
+      "ar": "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
+      "tr": "Subhaanallaahi wabihamdih.",
+      "idn": "Maha Suci Allah dan segala puji hanya untuk-Nya.",
+      "faedah": "Dibaca 100 kali pada petang hari sebagai dzikir yang agung dan ringan di lisan.",
+      "jumlah": 100
+    },
+    {
+      "id": 19,
+      "grup": "Petang",
+      "nama": "Perlindungan dengan Kalimat Allah",
+      "ar": "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+      "tr": "A'uudzu bikalimaatillaahit-taammaati min syarri maa khalaq.",
+      "idn": "Aku berlindung dengan kalimat-kalimat Allah yang sempurna dari kejahatan apa saja yang Dia ciptakan.",
+      "faedah": "Dibaca 3 kali pada petang hari untuk memohon perlindungan dari berbagai keburukan.",
+      "jumlah": 3
+    },
+    {
+      "id": 20,
+      "grup": "Setelah Sholat",
+      "nama": "Doa Ilmu, Rezeki, dan Amal",
+      "ar": "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا",
+      "tr": "Allahumma innii as-aluka 'ilman naafi'an, wa rizqan thayyiban, wa 'amalan mutaqabbalan.",
+      "idn": "Ya Allah, sesungguhnya aku memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik, dan amal yang diterima.",
+      "faedah": "Dibaca setelah salam sholat Subuh untuk memohon ilmu, rezeki, dan amal yang diberkahi.",
+      "jumlah": 1
+    }
+  ]
+}

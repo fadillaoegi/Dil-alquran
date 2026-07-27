@@ -24,6 +24,7 @@ class ShalatController extends GetxController {
   final RxBool isLoadingKabKota = false.obs;
   final RxBool isLoadingJadwal = false.obs;
   final RxBool isDetectingLocation = false.obs;
+  final RxString locationErrorMessage = "".obs;
 
   final RxBool isNotificationEnabled = false.obs;
   // 'adzan' | 'device' | 'custom'
@@ -88,15 +89,28 @@ class ShalatController extends GetxController {
 
   Future<void> fetchProvinsi() async {
     isLoadingProvinsi.value = true;
-    final result = await _source.getProvinsi();
-    listProvinsi.assignAll(result);
-    isLoadingProvinsi.value = false;
+    locationErrorMessage.value = "";
+    try {
+      final result = await _source.getProvinsi();
+      listProvinsi.assignAll(result);
 
-    if (selectedProvinsi.value.isNotEmpty && listProvinsi.contains(selectedProvinsi.value)) {
-      fetchKabKota(selectedProvinsi.value, isInit: true);
-    } else if (selectedProvinsi.value.isEmpty) {
-      // Jika belum ada lokasi tersimpan, coba deteksi otomatis (diam-diam).
-      _resolveFromGps();
+      final matchedSavedProvinsi = _findClosestMatch(
+        selectedProvinsi.value,
+        listProvinsi,
+      );
+      if (matchedSavedProvinsi.isNotEmpty) {
+        selectedProvinsi.value = matchedSavedProvinsi;
+        await fetchKabKota(matchedSavedProvinsi, isInit: true);
+      } else if (selectedProvinsi.value.isEmpty) {
+        // Jika belum ada lokasi tersimpan, coba deteksi otomatis (diam-diam).
+        _resolveFromGps();
+      }
+    } on ShalatApiException catch (e) {
+      listProvinsi.clear();
+      locationErrorMessage.value = e.message;
+      _snack("Lokasi Gagal Dimuat", e.message);
+    } finally {
+      isLoadingProvinsi.value = false;
     }
   }
 
@@ -144,8 +158,8 @@ class ShalatController extends GetxController {
 
     if (permission == LocationPermission.deniedForever) {
       if (showFeedback) {
-        _snack("Izin Diblokir",
-            "Aktifkan izin lokasi lewat Pengaturan aplikasi.");
+        _snack(
+            "Izin Diblokir", "Aktifkan izin lokasi lewat Pengaturan aplikasi.");
       }
       return false;
     }
@@ -153,8 +167,8 @@ class ShalatController extends GetxController {
     try {
       final position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.medium);
-      final placemarks = await placemarkFromCoordinates(
-          position.latitude, position.longitude);
+      final placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
 
       if (placemarks.isEmpty) {
         if (showFeedback) {
@@ -175,28 +189,33 @@ class ShalatController extends GetxController {
       final matchedProv = _findClosestMatch(adminArea, listProvinsi);
       if (matchedProv.isEmpty) {
         if (showFeedback) {
-          _snack("Tidak Cocok",
-              "Provinsi lokasimu tidak ditemukan di daftar.");
+          _snack("Tidak Cocok", "Provinsi lokasimu tidak ditemukan di daftar.");
         }
         return false;
       }
 
       selectedProvinsi.value = matchedProv;
-      isLoadingKabKota.value = true;
-      final kabKotaResult = await _source.getKabKota(matchedProv);
-      listKabKota.assignAll(kabKotaResult);
-      isLoadingKabKota.value = false;
+      locationErrorMessage.value = "";
+      await fetchKabKota(matchedProv, isInit: false, silentError: true);
 
-      if (subAdminArea != null) {
-        final matchedKota = _findClosestMatch(subAdminArea, listKabKota);
+      final cityCandidates = [
+        subAdminArea,
+        place.locality,
+        place.subLocality,
+        place.name,
+      ].whereType<String>().where((value) => value.trim().isNotEmpty);
+
+      for (final candidate in cityCandidates) {
+        final matchedKota = _findClosestMatch(candidate, listKabKota);
         if (matchedKota.isNotEmpty) {
           selectedKabKota.value = matchedKota;
-          _savePreferences();
+          await _savePreferences();
           await fetchJadwal(matchedProv, matchedKota);
           return true;
         }
       }
 
+      await _savePreferences();
       if (showFeedback) {
         _snack("Sebagian Terdeteksi",
             "Provinsi $matchedProv terdeteksi, silakan pilih kota secara manual.");
@@ -214,38 +233,93 @@ class ShalatController extends GetxController {
     showAppSnackbar(title, message, isError: !success);
   }
 
+  String _normalizeAreaName(String value) {
+    var normalized = value.toLowerCase().trim();
+    const replacements = <String, String>{
+      'daerah istimewa': 'di',
+      'daerah khusus ibukota': 'dki',
+      'kabupaten': 'kab',
+      'kab.': 'kab',
+      'kota administrasi': 'kota',
+      'provinsi': '',
+    };
+
+    replacements.forEach((from, to) {
+      normalized = normalized.replaceAll(from, to);
+    });
+
+    normalized = normalized.replaceAll('&', ' dan ');
+    normalized = normalized.replaceAll(RegExp(r'[^a-z0-9]+'), ' ');
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return normalized;
+  }
+
   String _findClosestMatch(String query, List<String> list) {
-    String q = query.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-    for (String item in list) {
-      String i = item.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-      if (q.contains(i) || i.contains(q)) {
+    if (query.trim().isEmpty || list.isEmpty) return "";
+
+    final normalizedQuery = _normalizeAreaName(query);
+    final queryCompact = normalizedQuery.replaceAll(' ', '');
+    final queryTokens = normalizedQuery.split(' ').where((e) => e.isNotEmpty);
+
+    for (final item in list) {
+      final normalizedItem = _normalizeAreaName(item);
+      final itemCompact = normalizedItem.replaceAll(' ', '');
+      if (queryCompact == itemCompact ||
+          queryCompact.contains(itemCompact) ||
+          itemCompact.contains(queryCompact)) {
         return item;
       }
     }
+
+    for (final item in list) {
+      final normalizedItem = _normalizeAreaName(item);
+      final itemTokens = normalizedItem.split(' ').where((e) => e.isNotEmpty);
+      final hasAllTokens = queryTokens.every(
+        (token) => itemTokens.any((itemToken) => itemToken.startsWith(token)),
+      );
+      if (hasAllTokens) return item;
+    }
+
     return "";
   }
 
-  Future<void> fetchKabKota(String provinsi, {bool isInit = false}) async {
+  Future<void> fetchKabKota(
+    String provinsi, {
+    bool isInit = false,
+    bool silentError = false,
+  }) async {
     isLoadingKabKota.value = true;
     selectedProvinsi.value = provinsi;
-    
+    locationErrorMessage.value = "";
+
     if (!isInit) {
       selectedKabKota.value = "";
       listJadwal.clear();
-      _savePreferences();
+      await _savePreferences();
     }
 
-    final result = await _source.getKabKota(provinsi);
-    listKabKota.assignAll(result);
-    isLoadingKabKota.value = false;
+    try {
+      final result = await _source.getKabKota(provinsi);
+      listKabKota.assignAll(result);
 
-    if (isInit) {
-      final prefs = await SharedPreferences.getInstance();
-      final savedKabKota = prefs.getString('saved_kabkota') ?? "";
-      if (savedKabKota.isNotEmpty && listKabKota.contains(savedKabKota)) {
-        selectedKabKota.value = savedKabKota;
-        fetchJadwal(provinsi, savedKabKota);
+      if (isInit) {
+        final prefs = await SharedPreferences.getInstance();
+        final savedKabKota = prefs.getString('saved_kabkota') ?? "";
+        final matchedSavedKabKota =
+            _findClosestMatch(savedKabKota, listKabKota);
+        if (matchedSavedKabKota.isNotEmpty) {
+          selectedKabKota.value = matchedSavedKabKota;
+          await fetchJadwal(provinsi, matchedSavedKabKota);
+        }
       }
+    } on ShalatApiException catch (e) {
+      listKabKota.clear();
+      locationErrorMessage.value = e.message;
+      if (!silentError) {
+        _snack("Kota Gagal Dimuat", e.message);
+      }
+    } finally {
+      isLoadingKabKota.value = false;
     }
   }
 
@@ -267,12 +341,20 @@ class ShalatController extends GetxController {
 
   Future<void> fetchJadwal(String provinsi, String kabkota) async {
     isLoadingJadwal.value = true;
-    final result = await _source.getJadwal(provinsi, kabkota);
-    listJadwal.assignAll(result);
-    isLoadingJadwal.value = false;
+    locationErrorMessage.value = "";
+    try {
+      final result = await _source.getJadwal(provinsi, kabkota);
+      listJadwal.assignAll(result);
 
-    if (isNotificationEnabled.value) {
-      _scheduleAllNotifications();
+      if (isNotificationEnabled.value) {
+        _scheduleAllNotifications();
+      }
+    } on ShalatApiException catch (e) {
+      listJadwal.clear();
+      locationErrorMessage.value = e.message;
+      _snack("Jadwal Gagal Dimuat", e.message);
+    } finally {
+      isLoadingJadwal.value = false;
     }
   }
 
@@ -288,7 +370,8 @@ class ShalatController extends GetxController {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("Pilih lokasi terlebih dahulu untuk mengaktifkan pengingat."),
+              content: Text(
+                  "Pilih lokasi terlebih dahulu untuk mengaktifkan pengingat."),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -312,7 +395,7 @@ class ShalatController extends GetxController {
         );
       }
     } else {
-      await _notificationService.cancelAll();
+      await _cancelPrayerNotifications();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -366,6 +449,20 @@ class ShalatController extends GetxController {
       _scheduleAllNotifications();
     }
   }
+
+  // Pilih semua / kosongkan semua waktu sholat sekaligus.
+  Future<void> setAllPrayers(bool value) async {
+    for (final prayer in prayerNames) {
+      enabledPrayers[prayer] = value;
+    }
+    _savePreferences();
+    if (isNotificationEnabled.value) {
+      _scheduleAllNotifications();
+    }
+  }
+
+  bool get allPrayersEnabled =>
+      prayerNames.every((prayer) => enabledPrayers[prayer] == true);
 
   // ---- Ringkasan untuk tampilan ----
   int get enabledPrayerCount =>
@@ -437,8 +534,16 @@ class ShalatController extends GetxController {
   // 5 waktu x 12 hari = 60, masih di bawah batas dan mencakup ~2 minggu ke depan.
   static const int _maxScheduled = 60;
 
+  // Batalkan hanya notifikasi sholat (id 1.._maxScheduled), tanpa menyentuh
+  // pengingat lain seperti muraja'ah Hafizh (id 5001).
+  Future<void> _cancelPrayerNotifications() async {
+    for (var id = 1; id <= _maxScheduled; id++) {
+      await _notificationService.cancel(id);
+    }
+  }
+
   void _scheduleAllNotifications() async {
-    await _notificationService.cancelAll();
+    await _cancelPrayerNotifications();
 
     final now = DateTime.now();
     int idCounter = 1;
@@ -460,7 +565,8 @@ class ShalatController extends GetxController {
         if (enabledPrayers[entry.key] != true) continue;
         try {
           // Format dari API misal: "2026-06-01" dan jam "04:36"
-          DateTime dt = DateTime.parse("${jadwal.tanggalLengkap} ${entry.value}:00");
+          DateTime dt =
+              DateTime.parse("${jadwal.tanggalLengkap} ${entry.value}:00");
           if (dt.isAfter(now)) {
             _notificationService.schedulePrayer(
               idCounter++,

@@ -759,154 +759,163 @@ class _SurahProgressTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<HafizhController>();
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18.0),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 10,
-            bottom: -10,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _hafizhCardBaseShadowColor,
-                borderRadius: BorderRadius.circular(18.0),
+    return _PressableScale(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 18.0),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 10,
+              bottom: -10,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _hafizhCardBaseShadowColor,
+                  borderRadius: BorderRadius.circular(18.0),
+                ),
               ),
             ),
-          ),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16.0),
-              onTap: onTap,
-              child: Ink(
-                decoration: BoxDecoration(
-                  color: ColorApp.white,
-                  borderRadius: BorderRadius.circular(16.0),
-                  border: Border.all(
-                    color: _hafizhCardBorderColor,
-                    width: 1.25,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ColorApp.primary.withValues(alpha: 0.04),
-                      blurRadius: 10.0,
-                      offset: const Offset(0, 2),
-                      spreadRadius: -2,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16.0),
+                onTap: onTap,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    color: ColorApp.white,
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(
+                      color: _hafizhCardBorderColor,
+                      width: 1.25,
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 42.0,
-                        height: 42.0,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: ColorApp.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: Text(
-                          "$nomor",
-                          style: primary700.copyWith(fontSize: 15.0),
-                        ),
-                      ),
-                      const SizedBox(width: 14.0),
-                      Expanded(
-                        child: Obx(() {
-                          final done = controller.memorizedCountForSurah(nomor);
-                          final progress =
-                              jumlahAyat == 0 ? 0.0 : done / jumlahAyat;
-                          final complete = jumlahAyat > 0 && done >= jumlahAyat;
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      namaLatin,
-                                      style: black600.copyWith(fontSize: 15.0),
-                                    ),
-                                  ),
-                                  if (complete)
-                                    const Icon(
-                                      Icons.verified_rounded,
-                                      color: ColorApp.primary,
-                                      size: 18.0,
-                                    ),
-                                  const SizedBox(width: 6.0),
-                                  GestureDetector(
-                                    onTap: onRangeTap,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0,
-                                        vertical: 5.0,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: ColorApp.primary
-                                            .withValues(alpha: 0.08),
-                                        borderRadius:
-                                            BorderRadius.circular(999.0),
-                                      ),
-                                      child: Text(
-                                        "Pilih ayat",
-                                        style:
-                                            primary600.copyWith(fontSize: 10.5),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 2.0),
-                              Text(
-                                arti,
-                                style: black400.copyWith(
-                                  fontSize: 12.0,
-                                  color: ColorApp.black.withValues(alpha: 0.55),
-                                ),
-                              ),
-                              const SizedBox(height: 8.0),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(6.0),
-                                      child: LinearProgressIndicator(
-                                        value: progress,
-                                        minHeight: 6.0,
-                                        backgroundColor: ColorApp.primary
-                                            .withValues(alpha: 0.12),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation<Color>(
-                                          ColorApp.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10.0),
-                                  Text(
-                                    "$done/$jumlahAyat",
-                                    style: primary600.copyWith(fontSize: 11.5),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        }),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ColorApp.primary.withValues(alpha: 0.04),
+                        blurRadius: 10.0,
+                        offset: const Offset(0, 2),
+                        spreadRadius: -2,
                       ),
                     ],
                   ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42.0,
+                          height: 42.0,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: ColorApp.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          child: Text(
+                            "$nomor",
+                            style: primary700.copyWith(fontSize: 15.0),
+                          ),
+                        ),
+                        const SizedBox(width: 14.0),
+                        Expanded(
+                          child: Obx(() {
+                            final done =
+                                controller.memorizedCountForSurah(nomor);
+                            final progress =
+                                jumlahAyat == 0 ? 0.0 : done / jumlahAyat;
+                            final complete =
+                                jumlahAyat > 0 && done >= jumlahAyat;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        namaLatin,
+                                        style:
+                                            black600.copyWith(fontSize: 15.0),
+                                      ),
+                                    ),
+                                    if (complete)
+                                      const Icon(
+                                        Icons.verified_rounded,
+                                        color: ColorApp.primary,
+                                        size: 18.0,
+                                      ),
+                                    const SizedBox(width: 6.0),
+                                    GestureDetector(
+                                      onTap: onRangeTap,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0,
+                                          vertical: 5.0,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: ColorApp.primary
+                                              .withValues(alpha: 0.08),
+                                          borderRadius:
+                                              BorderRadius.circular(999.0),
+                                        ),
+                                        child: Text(
+                                          "Pilih ayat",
+                                          style: primary600.copyWith(
+                                              fontSize: 10.5),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2.0),
+                                Text(
+                                  arti,
+                                  style: black400.copyWith(
+                                    fontSize: 12.0,
+                                    color:
+                                        ColorApp.black.withValues(alpha: 0.55),
+                                  ),
+                                ),
+                                const SizedBox(height: 8.0),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(6.0),
+                                        child: LinearProgressIndicator(
+                                          value: progress,
+                                          minHeight: 6.0,
+                                          backgroundColor: ColorApp.primary
+                                              .withValues(alpha: 0.12),
+                                          valueColor:
+                                              const AlwaysStoppedAnimation<
+                                                  Color>(
+                                            ColorApp.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10.0),
+                                    Text(
+                                      "$done/$jumlahAyat",
+                                      style:
+                                          primary600.copyWith(fontSize: 11.5),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -951,124 +960,125 @@ class _AyatRangeSheetState extends State<_AyatRangeSheet> {
           MediaQuery.of(context).viewInsets.bottom + 24.0,
         ),
         child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 42.0,
-              height: 4.0,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42.0,
+                height: 4.0,
+                decoration: BoxDecoration(
+                  color: ColorApp.black.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(999.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18.0),
+            Text(
+              "Atur Rentang Hafalan",
+              style: black600.copyWith(fontSize: 16.0),
+            ),
+            const SizedBox(height: 4.0),
+            Text(
+              "${widget.surahName} · ${widget.jumlahAyat} ayat",
+              style: black400.copyWith(
+                fontSize: 12.5,
+                color: ColorApp.black.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            Row(
+              children: [
+                Expanded(
+                  child: _AyatDropdown(
+                    label: "Dari ayat",
+                    value: _startAyat,
+                    options: ayatOptions,
+                    onChanged: (value) {
+                      setState(() {
+                        _startAyat = value;
+                        if (_endAyat < _startAyat) {
+                          _endAyat = _startAyat;
+                        }
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: _AyatDropdown(
+                    label: "Sampai ayat",
+                    value: _endAyat,
+                    options: ayatOptions
+                        .where((item) => item >= _startAyat)
+                        .toList(),
+                    onChanged: (value) => setState(() => _endAyat = value),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14.0),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
-                color: ColorApp.black.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(999.0),
+                color: ColorApp.secondary,
+                borderRadius: BorderRadius.circular(14.0),
+              ),
+              child: Text(
+                "Rentang terpilih: ayat $_startAyat - $_endAyat",
+                style: primary600.copyWith(fontSize: 12.5),
               ),
             ),
-          ),
-          const SizedBox(height: 18.0),
-          Text(
-            "Atur Rentang Hafalan",
-            style: black600.copyWith(fontSize: 16.0),
-          ),
-          const SizedBox(height: 4.0),
-          Text(
-            "${widget.surahName} · ${widget.jumlahAyat} ayat",
-            style: black400.copyWith(
-              fontSize: 12.5,
-              color: ColorApp.black.withValues(alpha: 0.6),
-            ),
-          ),
-          const SizedBox(height: 16.0),
-          Row(
-            children: [
-              Expanded(
-                child: _AyatDropdown(
-                  label: "Dari ayat",
-                  value: _startAyat,
-                  options: ayatOptions,
-                  onChanged: (value) {
-                    setState(() {
-                      _startAyat = value;
-                      if (_endAyat < _startAyat) {
-                        _endAyat = _startAyat;
-                      }
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: _AyatDropdown(
-                  label: "Sampai ayat",
-                  value: _endAyat,
-                  options:
-                      ayatOptions.where((item) => item >= _startAyat).toList(),
-                  onChanged: (value) => setState(() => _endAyat = value),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14.0),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12.0),
-            decoration: BoxDecoration(
-              color: ColorApp.secondary,
-              borderRadius: BorderRadius.circular(14.0),
-            ),
-            child: Text(
-              "Rentang terpilih: ayat $_startAyat - $_endAyat",
-              style: primary600.copyWith(fontSize: 12.5),
-            ),
-          ),
-          const SizedBox(height: 18.0),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ColorApp.primary,
-                    side: BorderSide(
-                      color: ColorApp.primary.withValues(alpha: 0.28),
+            const SizedBox(height: 18.0),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: ColorApp.primary,
+                      side: BorderSide(
+                        color: ColorApp.primary.withValues(alpha: 0.28),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.0),
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                    ),
+                    child: const Text("Batal"),
                   ),
-                  child: const Text("Batal"),
                 ),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Get.toNamed(
-                      RouteScreen.hafizhDetail,
-                      arguments: {
-                        "category": "surah",
-                        "number": widget.surahNumber,
-                        "startAyat": _startAyat,
-                        "endAyat": _endAyat,
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorApp.primary,
-                    foregroundColor: ColorApp.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.0),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Get.toNamed(
+                        RouteScreen.hafizhDetail,
+                        arguments: {
+                          "category": "surah",
+                          "number": widget.surahNumber,
+                          "startAyat": _startAyat,
+                          "endAyat": _endAyat,
+                        },
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorApp.primary,
+                      foregroundColor: ColorApp.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.0),
+                      ),
                     ),
+                    child: const Text("Mulai Hafalan"),
                   ),
-                  child: const Text("Mulai Hafalan"),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1132,154 +1142,197 @@ class _JuzProgressTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<HafizhController>();
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18.0),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 10,
-            bottom: -10,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _hafizhCardBaseShadowColor,
-                borderRadius: BorderRadius.circular(18.0),
+    return _PressableScale(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 18.0),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 10,
+              bottom: -10,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _hafizhCardBaseShadowColor,
+                  borderRadius: BorderRadius.circular(18.0),
+                ),
               ),
             ),
-          ),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16.0),
-              onTap: onTap,
-              child: Ink(
-                decoration: BoxDecoration(
-                  color: ColorApp.white,
-                  borderRadius: BorderRadius.circular(16.0),
-                  border: Border.all(
-                    color: _hafizhCardBorderColor,
-                    width: 1.25,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ColorApp.primary.withValues(alpha: 0.04),
-                      blurRadius: 10.0,
-                      offset: const Offset(0, 2),
-                      spreadRadius: -2,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16.0),
+                onTap: onTap,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    color: ColorApp.white,
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(
+                      color: _hafizhCardBorderColor,
+                      width: 1.25,
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 42.0,
-                        height: 42.0,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: ColorApp.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        child: Text(
-                          "$number",
-                          style: primary700.copyWith(fontSize: 15.0),
-                        ),
-                      ),
-                      const SizedBox(width: 14.0),
-                      Expanded(
-                        child: Obx(() {
-                          final done = controller.memorizedCountForJuz(number);
-                          final progress =
-                              totalAyat == 0 ? 0.0 : done / totalAyat;
-                          final complete = totalAyat > 0 && done >= totalAyat;
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Juz $number",
-                                      style: black600.copyWith(fontSize: 15.0),
-                                    ),
-                                  ),
-                                  if (complete)
-                                    const Icon(
-                                      Icons.verified_rounded,
-                                      color: ColorApp.primary,
-                                      size: 18.0,
-                                    ),
-                                  const SizedBox(width: 6.0),
-                                  GestureDetector(
-                                    onTap: onRangeTap,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0,
-                                        vertical: 5.0,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: ColorApp.primary
-                                            .withValues(alpha: 0.08),
-                                        borderRadius:
-                                            BorderRadius.circular(999.0),
-                                      ),
-                                      child: Text(
-                                        "Pilih ayat",
-                                        style:
-                                            primary600.copyWith(fontSize: 10.5),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 2.0),
-                              Text(
-                                "$startSurahName – $endSurahName",
-                                style: black400.copyWith(
-                                  fontSize: 12.0,
-                                  color: ColorApp.black.withValues(alpha: 0.55),
-                                ),
-                              ),
-                              const SizedBox(height: 8.0),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(6.0),
-                                      child: LinearProgressIndicator(
-                                        value: progress,
-                                        minHeight: 6.0,
-                                        backgroundColor: ColorApp.primary
-                                            .withValues(alpha: 0.12),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation<Color>(
-                                          ColorApp.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10.0),
-                                  Text(
-                                    "$done/$totalAyat",
-                                    style: primary600.copyWith(fontSize: 11.5),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        }),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ColorApp.primary.withValues(alpha: 0.04),
+                        blurRadius: 10.0,
+                        offset: const Offset(0, 2),
+                        spreadRadius: -2,
                       ),
                     ],
                   ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42.0,
+                          height: 42.0,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: ColorApp.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          child: Text(
+                            "$number",
+                            style: primary700.copyWith(fontSize: 15.0),
+                          ),
+                        ),
+                        const SizedBox(width: 14.0),
+                        Expanded(
+                          child: Obx(() {
+                            final done =
+                                controller.memorizedCountForJuz(number);
+                            final progress =
+                                totalAyat == 0 ? 0.0 : done / totalAyat;
+                            final complete = totalAyat > 0 && done >= totalAyat;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        "Juz $number",
+                                        style:
+                                            black600.copyWith(fontSize: 15.0),
+                                      ),
+                                    ),
+                                    if (complete)
+                                      const Icon(
+                                        Icons.verified_rounded,
+                                        color: ColorApp.primary,
+                                        size: 18.0,
+                                      ),
+                                    const SizedBox(width: 6.0),
+                                    GestureDetector(
+                                      onTap: onRangeTap,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0,
+                                          vertical: 5.0,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: ColorApp.primary
+                                              .withValues(alpha: 0.08),
+                                          borderRadius:
+                                              BorderRadius.circular(999.0),
+                                        ),
+                                        child: Text(
+                                          "Pilih ayat",
+                                          style: primary600.copyWith(
+                                              fontSize: 10.5),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2.0),
+                                Text(
+                                  "$startSurahName – $endSurahName",
+                                  style: black400.copyWith(
+                                    fontSize: 12.0,
+                                    color:
+                                        ColorApp.black.withValues(alpha: 0.55),
+                                  ),
+                                ),
+                                const SizedBox(height: 8.0),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(6.0),
+                                        child: LinearProgressIndicator(
+                                          value: progress,
+                                          minHeight: 6.0,
+                                          backgroundColor: ColorApp.primary
+                                              .withValues(alpha: 0.12),
+                                          valueColor:
+                                              const AlwaysStoppedAnimation<
+                                                  Color>(
+                                            ColorApp.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10.0),
+                                    Text(
+                                      "$done/$totalAyat",
+                                      style:
+                                          primary600.copyWith(fontSize: 11.5),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PressableScale extends StatefulWidget {
+  const _PressableScale({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_PressableScale> createState() => _PressableScaleState();
+}
+
+class _PressableScaleState extends State<_PressableScale> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted) return;
+    if (_pressed != value) {
+      setState(() => _pressed = value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => _setPressed(true),
+      onPointerUp: (_) => _setPressed(false),
+      onPointerCancel: (_) => _setPressed(false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
       ),
     );
   }
@@ -1326,124 +1379,125 @@ class _JuzAyatRangeSheetState extends State<_JuzAyatRangeSheet> {
           MediaQuery.of(context).viewInsets.bottom + 24.0,
         ),
         child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 42.0,
-              height: 4.0,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 42.0,
+                height: 4.0,
+                decoration: BoxDecoration(
+                  color: ColorApp.black.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(999.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18.0),
+            Text(
+              "Atur Rentang Hafalan Juz",
+              style: black600.copyWith(fontSize: 16.0),
+            ),
+            const SizedBox(height: 4.0),
+            Text(
+              "Juz ${widget.juzNumber} · ${widget.startSurahName} - ${widget.endSurahName}",
+              style: black400.copyWith(
+                fontSize: 12.5,
+                color: ColorApp.black.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            Row(
+              children: [
+                Expanded(
+                  child: _AyatDropdown(
+                    label: "Dari ayat",
+                    value: _startAyat,
+                    options: ayatOptions,
+                    onChanged: (value) {
+                      setState(() {
+                        _startAyat = value;
+                        if (_endAyat < _startAyat) {
+                          _endAyat = _startAyat;
+                        }
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: _AyatDropdown(
+                    label: "Sampai ayat",
+                    value: _endAyat,
+                    options: ayatOptions
+                        .where((item) => item >= _startAyat)
+                        .toList(),
+                    onChanged: (value) => setState(() => _endAyat = value),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14.0),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
-                color: ColorApp.black.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(999.0),
+                color: ColorApp.secondary,
+                borderRadius: BorderRadius.circular(14.0),
+              ),
+              child: Text(
+                "Rentang terpilih: ayat juz $_startAyat - $_endAyat",
+                style: primary600.copyWith(fontSize: 12.5),
               ),
             ),
-          ),
-          const SizedBox(height: 18.0),
-          Text(
-            "Atur Rentang Hafalan Juz",
-            style: black600.copyWith(fontSize: 16.0),
-          ),
-          const SizedBox(height: 4.0),
-          Text(
-            "Juz ${widget.juzNumber} · ${widget.startSurahName} - ${widget.endSurahName}",
-            style: black400.copyWith(
-              fontSize: 12.5,
-              color: ColorApp.black.withValues(alpha: 0.6),
-            ),
-          ),
-          const SizedBox(height: 16.0),
-          Row(
-            children: [
-              Expanded(
-                child: _AyatDropdown(
-                  label: "Dari ayat",
-                  value: _startAyat,
-                  options: ayatOptions,
-                  onChanged: (value) {
-                    setState(() {
-                      _startAyat = value;
-                      if (_endAyat < _startAyat) {
-                        _endAyat = _startAyat;
-                      }
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: _AyatDropdown(
-                  label: "Sampai ayat",
-                  value: _endAyat,
-                  options:
-                      ayatOptions.where((item) => item >= _startAyat).toList(),
-                  onChanged: (value) => setState(() => _endAyat = value),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14.0),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12.0),
-            decoration: BoxDecoration(
-              color: ColorApp.secondary,
-              borderRadius: BorderRadius.circular(14.0),
-            ),
-            child: Text(
-              "Rentang terpilih: ayat juz $_startAyat - $_endAyat",
-              style: primary600.copyWith(fontSize: 12.5),
-            ),
-          ),
-          const SizedBox(height: 18.0),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ColorApp.primary,
-                    side: BorderSide(
-                      color: ColorApp.primary.withValues(alpha: 0.28),
+            const SizedBox(height: 18.0),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: ColorApp.primary,
+                      side: BorderSide(
+                        color: ColorApp.primary.withValues(alpha: 0.28),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.0),
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.0),
-                    ),
+                    child: const Text("Batal"),
                   ),
-                  child: const Text("Batal"),
                 ),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Get.toNamed(
-                      RouteScreen.hafizhDetail,
-                      arguments: {
-                        "category": "juz",
-                        "number": widget.juzNumber,
-                        "startAyat": _startAyat,
-                        "endAyat": _endAyat,
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorApp.primary,
-                    foregroundColor: ColorApp.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.0),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Get.toNamed(
+                        RouteScreen.hafizhDetail,
+                        arguments: {
+                          "category": "juz",
+                          "number": widget.juzNumber,
+                          "startAyat": _startAyat,
+                          "endAyat": _endAyat,
+                        },
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorApp.primary,
+                      foregroundColor: ColorApp.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.0),
+                      ),
                     ),
+                    child: const Text("Mulai Hafalan"),
                   ),
-                  child: const Text("Mulai Hafalan"),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

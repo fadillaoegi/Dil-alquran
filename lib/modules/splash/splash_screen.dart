@@ -26,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final seenOnboarding = prefs.getBool(OnboardingController.seenKey) ?? false;
 
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
     // First-launch diarahkan ke onboarding, selebihnya langsung ke menu.

@@ -1,7 +1,5 @@
 import 'package:dilalquran/modules/doa/controller/doa_controller.dart';
-import 'package:dilalquran/modules/download/download_controller.dart';
 import 'package:dilalquran/routes/route.dart';
-import 'package:dilalquran/services/connectivity_service.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:dilalquran/widgets/form_search_widget.dart';
@@ -17,13 +15,19 @@ class DoaScreen extends StatefulWidget {
 
 class _DoaScreenState extends State<DoaScreen> {
   final DoaController controller = Get.find<DoaController>();
-  final DownloadController dl = Get.find<DownloadController>();
-  final ConnectivityService conn = Get.find<ConnectivityService>();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   static const Color _cardBorderColor = Color(0xFFD3D3D3);
   static const Color _cardBaseShadowColor = Color(0xFFCFCFCF);
   static const double _cardRadius = 18.0;
+  int? _pressedDoaId;
+
+  void _setPressedDoa(int? doaId) {
+    if (!mounted) return;
+    if (_pressedDoaId != doaId) {
+      setState(() => _pressedDoaId = doaId);
+    }
+  }
 
   @override
   void initState() {
@@ -59,36 +63,6 @@ class _DoaScreenState extends State<DoaScreen> {
           ),
         ),
         iconTheme: const IconThemeData(color: ColorApp.white),
-        actions: [
-          Obx(() {
-            if (dl.doaBusy.value) {
-              return const Padding(
-                padding: EdgeInsets.all(14.0),
-                child: SizedBox(
-                  width: 20.0,
-                  height: 20.0,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2.0, color: ColorApp.white),
-                ),
-              );
-            }
-            final all = controller.allDoa;
-            final allDownloaded = all.isNotEmpty &&
-                all.every((d) => dl.isDoaDownloaded(d.id ?? -1));
-            return IconButton(
-              tooltip:
-                  allDownloaded ? "Hapus semua unduhan doa" : "Unduh semua doa",
-              icon: Icon(
-                allDownloaded
-                    ? Icons.cloud_done_rounded
-                    : Icons.download_rounded,
-                color: ColorApp.white,
-              ),
-              onPressed: () =>
-                  allDownloaded ? dl.removeAllDoa() : dl.downloadAllDoa(),
-            );
-          }),
-        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -125,9 +99,7 @@ class _DoaScreenState extends State<DoaScreen> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {
-                        controller.fetchDoa();
-                      },
+                      onPressed: controller.fetchDoa,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorApp.primary,
                         shape: RoundedRectangleBorder(
@@ -146,18 +118,30 @@ class _DoaScreenState extends State<DoaScreen> {
           );
         }
 
-        final online = conn.isOnline.value;
-        // Saat offline, tampilkan semua doa yang sudah di-download
-        // (dari daftar penuh, tidak terbatas paginasi).
-        final doaList = online
-            ? controller.displayedDoasList.toList()
-            : controller.allDoa
-                .where((d) => dl.isDoaDownloaded(d.id ?? -1))
-                .toList();
+        final doaList = controller.displayedDoasList.toList();
 
         return Column(
           children: [
-            if (!online) _buildOfflineBanner(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 0.0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.folder_rounded,
+                    size: 14.0,
+                    color: ColorApp.primary.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 6.0),
+                  Text(
+                    "Data lokal · ${doaList.length} doa",
+                    style: primary400.copyWith(
+                      fontSize: 11.5,
+                      color: ColorApp.black.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: FormSearch(
@@ -171,17 +155,17 @@ class _DoaScreenState extends State<DoaScreen> {
                 },
               ),
             ),
+            _buildLocalCategoryFilter(),
             if (doaList.isEmpty)
               Expanded(
                 child: Center(
                   child: Text(
-                    !online && controller.searchQuery.isEmpty
-                        ? "Belum ada doa yang diunduh"
-                        : "Doa tidak ditemukan",
+                    "Doa tidak ditemukan",
                     textAlign: TextAlign.center,
                     style: primary400.copyWith(
-                        fontSize: 16,
-                        color: ColorApp.black.withValues(alpha: 0.5)),
+                      fontSize: 16,
+                      color: ColorApp.black.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
               )
@@ -194,119 +178,148 @@ class _DoaScreenState extends State<DoaScreen> {
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 8.0),
-                    itemCount: doaList.length +
-                        (online && controller.isLoadMore.value ? 1 : 0),
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    itemCount:
+                        doaList.length + (controller.isLoadMore.value ? 1 : 0),
                     itemBuilder: (context, index) {
-                    if (index == doaList.length) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20.0),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                              color: ColorApp.primary),
+                      if (index == doaList.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20.0),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: ColorApp.primary,
+                            ),
+                          ),
+                        );
+                      }
+
+                      final doa = doaList[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 18.0),
+                        child: Listener(
+                          onPointerDown: (_) => _setPressedDoa(doa.id),
+                          onPointerUp: (_) => _setPressedDoa(null),
+                          onPointerCancel: (_) => _setPressedDoa(null),
+                          child: AnimatedScale(
+                            scale: _pressedDoaId == doa.id ? 0.97 : 1.0,
+                            duration: const Duration(milliseconds: 120),
+                            curve: Curves.easeOut,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  top: 10,
+                                  bottom: -10,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: _cardBaseShadowColor,
+                                      borderRadius: BorderRadius.circular(
+                                        _cardRadius + 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      Get.toNamed(
+                                        RouteScreen.detailDoa,
+                                        arguments: doa,
+                                      );
+                                    },
+                                    borderRadius:
+                                        BorderRadius.circular(_cardRadius),
+                                    child: Ink(
+                                      decoration: BoxDecoration(
+                                        color: ColorApp.white,
+                                        borderRadius: BorderRadius.circular(
+                                          _cardRadius,
+                                        ),
+                                        border: Border.all(
+                                          color: _cardBorderColor,
+                                          width: 1.25,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: ColorApp.primary.withValues(
+                                              alpha: 0.04,
+                                            ),
+                                            offset: const Offset(0, 2),
+                                            blurRadius: 10,
+                                            spreadRadius: -2,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20.0,
+                                          vertical: 16.0,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.all(10.0),
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    ColorApp.primary.withValues(
+                                                  alpha: 0.10,
+                                                ),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Text(
+                                                "${doa.id}",
+                                                style: primary600.copyWith(
+                                                  fontSize: 12.0,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16.0),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    doa.nama ?? "Doa",
+                                                    style: primary600.copyWith(
+                                                      fontSize: 16.0,
+                                                      color: ColorApp.black,
+                                                    ),
+                                                  ),
+                                                  if ((doa.grup ?? "")
+                                                      .trim()
+                                                      .isNotEmpty) ...[
+                                                    const SizedBox(height: 6.0),
+                                                    _grupBadge(doa.grup!),
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
+                                            Icon(
+                                              Icons.arrow_forward_ios_rounded,
+                                              size: 16.0,
+                                              color:
+                                                  ColorApp.primary.withValues(
+                                                alpha: 0.85,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       );
-                    }
-
-                    final doa = doaList[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 18.0),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            top: 10,
-                            bottom: -10,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: _cardBaseShadowColor,
-                                borderRadius: BorderRadius.circular(
-                                  _cardRadius + 2,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                Get.toNamed(RouteScreen.detailDoa,
-                                    arguments: doa);
-                              },
-                              borderRadius: BorderRadius.circular(_cardRadius),
-                              child: Ink(
-                                decoration: BoxDecoration(
-                                  color: ColorApp.white,
-                                  borderRadius: BorderRadius.circular(
-                                    _cardRadius,
-                                  ),
-                                  border: Border.all(
-                                    color: _cardBorderColor,
-                                    width: 1.25,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: ColorApp.primary.withValues(
-                                        alpha: 0.04,
-                                      ),
-                                      offset: const Offset(0, 2),
-                                      blurRadius: 10,
-                                      spreadRadius: -2,
-                                    ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20.0,
-                                    vertical: 16.0,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10.0),
-                                        decoration: BoxDecoration(
-                                          color: ColorApp.primary.withValues(
-                                            alpha: 0.10,
-                                          ),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          "${doa.id}",
-                                          style: primary600.copyWith(
-                                            fontSize: 12.0,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16.0),
-                                      Expanded(
-                                        child: Text(
-                                          doa.nama ?? "Doa",
-                                          style: primary600.copyWith(
-                                            fontSize: 16.0,
-                                            color: ColorApp.black,
-                                          ),
-                                        ),
-                                      ),
-                                      _doaDownloadBtn(doa.id ?? 0),
-                                      const SizedBox(width: 4.0),
-                                      Icon(
-                                        Icons.arrow_forward_ios_rounded,
-                                        size: 16.0,
-                                        color: ColorApp.primary.withValues(
-                                          alpha: 0.85,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
                     },
                   ),
                 ),
@@ -317,40 +330,111 @@ class _DoaScreenState extends State<DoaScreen> {
     );
   }
 
-  Widget _doaDownloadBtn(int id) {
-    return Obx(() {
-      final done = dl.isDoaDownloaded(id);
-      return IconButton(
-        visualDensity: VisualDensity.compact,
-        tooltip: done ? "Terunduh (ketuk untuk hapus)" : "Unduh untuk offline",
-        icon: Icon(
-          done ? Icons.download_done_rounded : Icons.download_outlined,
-          size: 22.0,
-          color:
-              done ? ColorApp.primary : ColorApp.black.withValues(alpha: 0.35),
-        ),
-        onPressed: () => dl.toggleDoaItem(id),
-      );
-    });
-  }
-
-  Widget _buildOfflineBanner() {
+  Widget _grupBadge(String grup) {
     return Container(
-      width: double.infinity,
-      color: ColorApp.black.withValues(alpha: 0.85),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        children: [
-          const Icon(Icons.wifi_off_rounded, color: ColorApp.white, size: 16.0),
-          const SizedBox(width: 8.0),
-          Expanded(
-            child: Text(
-              "Mode offline — menampilkan doa yang sudah diunduh.",
-              style: white400.copyWith(fontSize: 12.0),
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+      decoration: BoxDecoration(
+        color: ColorApp.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999.0),
+        border: Border.all(color: ColorApp.primary.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        grup,
+        style: primary600.copyWith(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
+  }
+
+  Widget _buildLocalCategoryFilter() {
+    return Obx(() {
+      final categories = controller.localCategories;
+      final selected = controller.selectedCategory.value;
+
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 2.0, bottom: 10.0),
+              child: Text(
+                "Kategori Doa",
+                style: primary600.copyWith(
+                  fontSize: 12.5,
+                  color: ColorApp.black.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: categories.map((category) {
+                  final active = selected == category;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(999.0),
+                        onTap: () => controller.selectCategory(category),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14.0,
+                            vertical: 9.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: active ? ColorApp.primary : ColorApp.white,
+                            borderRadius: BorderRadius.circular(999.0),
+                            border: Border.all(
+                              color:
+                                  active ? ColorApp.primary : _cardBorderColor,
+                              width: 1.15,
+                            ),
+                            boxShadow: active
+                                ? [
+                                    BoxShadow(
+                                      color: ColorApp.primary.withValues(
+                                        alpha: 0.14,
+                                      ),
+                                      offset: const Offset(0, 4),
+                                      blurRadius: 10,
+                                      spreadRadius: -3,
+                                    ),
+                                  ]
+                                : [
+                                    BoxShadow(
+                                      color: ColorApp.primary.withValues(
+                                        alpha: 0.03,
+                                      ),
+                                      offset: const Offset(0, 2),
+                                      blurRadius: 8,
+                                      spreadRadius: -2,
+                                    ),
+                                  ],
+                          ),
+                          child: Text(
+                            category,
+                            style: TextStyle(
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.w700,
+                              color: active ? ColorApp.white : ColorApp.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

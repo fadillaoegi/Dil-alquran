@@ -35,14 +35,46 @@ class ShalatNotifScreen extends GetView<ShalatController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20.0),
-                Text("Waktu Sholat yang Diingatkan",
-                    style: primary700.copyWith(fontSize: 15.0)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text("Waktu Sholat yang Diingatkan",
+                          style: primary700.copyWith(fontSize: 15.0)),
+                    ),
+                    Obx(() {
+                      final all = controller.allPrayersEnabled;
+                      return GestureDetector(
+                        onTap: () => controller.setAllPrayers(!all),
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              all
+                                  ? Icons.remove_done_rounded
+                                  : Icons.done_all_rounded,
+                              size: 15.0,
+                              color: ColorApp.primary,
+                            ),
+                            const SizedBox(width: 4.0),
+                            Text(
+                              all ? "Kosongkan" : "Pilih semua",
+                              style: primary600.copyWith(fontSize: 12.0),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
                 const SizedBox(height: 4.0),
-                Text(
-                  "Pilih waktu sholat yang ingin dibunyikan notifikasinya.",
-                  style: black400.copyWith(
-                    fontSize: 12.5,
-                    color: ColorApp.black.withValues(alpha: 0.6),
+                Obx(
+                  () => Text(
+                    "${controller.enabledPrayerCount} dari ${ShalatController.prayerNames.length} waktu dipilih.",
+                    style: black400.copyWith(
+                      fontSize: 12.5,
+                      color: ColorApp.black.withValues(alpha: 0.6),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12.0),
@@ -67,28 +99,31 @@ class ShalatNotifScreen extends GetView<ShalatController> {
       return Container(
         padding: const EdgeInsets.all(18.0),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: enabled
-                ? const [Color(0xff0d4e34), ColorApp.primary]
-                : [ColorApp.white, ColorApp.white],
-          ),
+          color: enabled ? null : ColorApp.white,
+          gradient: enabled
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xff11623f), Color(0xff2f9e69)],
+                )
+              : null,
           borderRadius: BorderRadius.circular(20.0),
           border: Border.all(
             color: enabled
                 ? Colors.transparent
-                : ColorApp.primary.withValues(alpha: 0.15),
+                : ColorApp.primary.withValues(alpha: 0.12),
+            width: 1.5,
           ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: ColorApp.primary.withValues(alpha: 0.3),
-                    blurRadius: 16.0,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
-              : null,
+          // Hard offset shadow — chunky 3D (kreate.gg).
+          boxShadow: [
+            BoxShadow(
+              color: enabled
+                  ? const Color(0xff0a3d29)
+                  : ColorApp.primary.withValues(alpha: 0.16),
+              offset: const Offset(0, 6),
+              blurRadius: 0,
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -173,28 +208,80 @@ class ShalatNotifScreen extends GetView<ShalatController> {
     );
   }
 
+  static const Map<String, IconData> _prayerIcons = {
+    "Subuh": Icons.wb_twilight_rounded,
+    "Dzuhur": Icons.wb_sunny_rounded,
+    "Ashar": Icons.cloud_rounded,
+    "Maghrib": Icons.brightness_3_rounded,
+    "Isya": Icons.nightlight_round,
+  };
+
   Widget _buildPrayerChips() {
     return Obx(
       () => Wrap(
-        spacing: 8.0,
-        runSpacing: 8.0,
+        spacing: 10.0,
+        runSpacing: 10.0,
         children: ShalatController.prayerNames.map((prayer) {
           final selected = controller.enabledPrayers[prayer] ?? true;
-          return FilterChip(
-            label: Text(prayer),
-            selected: selected,
-            showCheckmark: false,
-            onSelected: (value) => controller.togglePrayer(prayer, value),
-            labelStyle: TextStyle(
-              fontSize: 13.0,
-              fontWeight: FontWeight.w600,
-              color: selected ? ColorApp.white : ColorApp.primary,
-            ),
-            backgroundColor: ColorApp.white,
-            selectedColor: ColorApp.primary,
-            side: BorderSide(color: ColorApp.primary.withValues(alpha: 0.4)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.0),
+          final fg = selected ? ColorApp.white : ColorApp.primary;
+          return GestureDetector(
+            onTap: () => controller.togglePrayer(prayer, !selected),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14.0, vertical: 10.0),
+              decoration: BoxDecoration(
+                color: selected ? ColorApp.primary : ColorApp.white,
+                borderRadius: BorderRadius.circular(14.0),
+                border: Border.all(
+                  color: selected
+                      ? ColorApp.primary
+                      : ColorApp.primary.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
+                // Chunky hard shadow saat terpilih.
+                boxShadow: selected
+                    ? const [
+                        BoxShadow(
+                          color: Color(0xff0c3f2a),
+                          offset: Offset(0, 3),
+                          blurRadius: 0,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _prayerIcons[prayer] ?? Icons.schedule_rounded,
+                    size: 16.0,
+                    color: fg,
+                  ),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    prayer,
+                    style: TextStyle(
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.w700,
+                      color: fg,
+                    ),
+                  ),
+                  // Centang muncul halus saat terpilih.
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    child: selected
+                        ? const Padding(
+                            padding: EdgeInsets.only(left: 6.0),
+                            child: Icon(Icons.check_rounded,
+                                size: 15.0, color: ColorApp.white),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
             ),
           );
         }).toList(),
@@ -257,8 +344,16 @@ class ShalatNotifScreen extends GetView<ShalatController> {
             color: selected
                 ? ColorApp.primary
                 : ColorApp.primary.withValues(alpha: 0.12),
-            width: selected ? 1.5 : 1.0,
+            width: 1.5,
           ),
+          // Hard offset shadow — chunky 3D (kreate.gg).
+          boxShadow: [
+            BoxShadow(
+              color: ColorApp.primary.withValues(alpha: selected ? 0.22 : 0.12),
+              offset: const Offset(0, 4),
+              blurRadius: 0,
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -304,18 +399,43 @@ class ShalatNotifScreen extends GetView<ShalatController> {
   }
 
   Widget _buildTestButton() {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: controller.testNotificationSound,
-        icon: const Icon(Icons.volume_up_rounded, size: 18.0),
-        label: const Text("Coba Notifikasi Sekarang"),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: ColorApp.primary,
-          side: BorderSide(color: ColorApp.primary.withValues(alpha: 0.4)),
-          padding: const EdgeInsets.symmetric(vertical: 14.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
+      decoration: BoxDecoration(
+        color: ColorApp.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(
+          color: ColorApp.primary.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
+        // Hard offset shadow — tombol chunky (kreate.gg).
+        boxShadow: [
+          BoxShadow(
+            color: ColorApp.primary.withValues(alpha: 0.16),
+            offset: const Offset(0, 4),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14.0),
+          onTap: controller.testNotificationSound,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.volume_up_rounded,
+                    size: 18.0, color: ColorApp.primary),
+                const SizedBox(width: 8.0),
+                Text(
+                  "Coba Notifikasi Sekarang",
+                  style: primary700.copyWith(fontSize: 14.0),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -54,104 +54,110 @@ class ShalatScreen extends GetView<ShalatController> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildLocationCard(),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoadingJadwal.value) {
-                return const Center(
-                  child: CircularProgressIndicator(color: ColorApp.primary),
-                );
-              }
+      body: Obx(() {
+        final loading = controller.isLoadingJadwal.value;
+        final jadwal = controller.listJadwal;
+        final empty = jadwal.isEmpty;
 
-              if (controller.listJadwal.isEmpty) {
-                return RefreshIndicator(
-                  color: ColorApp.primary,
-                  onRefresh: controller.refreshJadwal,
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      const SizedBox(height: 100),
-                      _buildEmptyState(),
-                    ],
+        final now = DateTime.now();
+        final todayStr =
+            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+        var startIndex =
+            empty ? 0 : jadwal.indexWhere((j) => j.tanggalLengkap == todayStr);
+        if (startIndex == -1) startIndex = 0;
+        final dayCount = empty ? 0 : jadwal.length - startIndex;
+
+        // 1 item untuk kartu lokasi + konten (loading/empty/hero+title+hari).
+        final contentCount = (loading || empty) ? 1 : (dayCount + 2);
+
+        return RefreshIndicator(
+          color: ColorApp.primary,
+          onRefresh: controller.refreshJadwal,
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 24.0),
+            itemCount: 1 + contentCount,
+            itemBuilder: (context, index) {
+              if (index == 0) return _buildLocationCard();
+
+              final i = index - 1;
+              if (loading) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 60.0),
+                  child: Center(
+                    child: CircularProgressIndicator(color: ColorApp.primary),
                   ),
                 );
               }
-
-              final now = DateTime.now();
-              final todayStr =
-                  "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-
-              var startIndex = controller.listJadwal
-                  .indexWhere((j) => j.tanggalLengkap == todayStr);
-              if (startIndex == -1) startIndex = 0;
-
-              final dayCount = controller.listJadwal.length - startIndex;
-
-              return RefreshIndicator(
-                color: ColorApp.primary,
-                onRefresh: controller.refreshJadwal,
-                child: ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 24.0),
-                  itemCount: dayCount + 2,
-                  itemBuilder: (context, index) {
-                    if (index == 0) return const _NextPrayerCard();
-                    if (index == 1) {
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(4.0, 8.0, 4.0, 12.0),
-                        child: Text(
-                          "Jadwal Berikutnya",
-                          style: primary700.copyWith(fontSize: 16.0),
-                        ),
-                      );
-                    }
-                    final jadwal =
-                        controller.listJadwal[startIndex + index - 2];
-                    return _buildDayCard(jadwal, todayStr);
-                  },
-                ),
-              );
-            }),
+              if (empty) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 60.0),
+                  child: _buildEmptyState(),
+                );
+              }
+              if (i == 0) return const _NextPrayerCard();
+              if (i == 1) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(4.0, 8.0, 4.0, 12.0),
+                  child: Text(
+                    "Jadwal Berikutnya",
+                    style: primary700.copyWith(fontSize: 16.0),
+                  ),
+                );
+              }
+              return _buildDayCard(jadwal[startIndex + i - 2], todayStr);
+            },
           ),
-        ],
-      ),
+        );
+      }),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.location_off_rounded,
-                size: 56.0, color: ColorApp.primary.withValues(alpha: 0.4)),
-            const SizedBox(height: 12.0),
-            Text(
-              "Pilih lokasi untuk melihat jadwal sholat.",
-              textAlign: TextAlign.center,
-              style: primary400.copyWith(fontSize: 14.0),
-            ),
-          ],
+    return Obx(() {
+      final errorMessage = controller.locationErrorMessage.value;
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.location_off_rounded,
+                  size: 56.0, color: ColorApp.primary.withValues(alpha: 0.4)),
+              const SizedBox(height: 12.0),
+              Text(
+                errorMessage.isNotEmpty
+                    ? errorMessage
+                    : "Pilih lokasi untuk melihat jadwal sholat.",
+                textAlign: TextAlign.center,
+                style: primary400.copyWith(fontSize: 14.0),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildLocationCard() {
     return Container(
+      margin: const EdgeInsets.only(bottom: 16.0),
       padding: const EdgeInsets.all(16.0),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: ColorApp.white,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(
+          color: ColorApp.primary.withValues(alpha: 0.12),
+          width: 1.5,
         ),
+        // Hard offset shadow — chunky 3D (kreate.gg).
         boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+          BoxShadow(
+            color: ColorApp.primary.withValues(alpha: 0.16),
+            offset: const Offset(0, 5),
+            blurRadius: 0,
+          ),
         ],
       ),
       child: Column(
@@ -166,6 +172,33 @@ class ShalatScreen extends GetView<ShalatController> {
             ],
           ),
           const SizedBox(height: 12.0),
+          Obx(() {
+            final errorMessage = controller.locationErrorMessage.value;
+            if (errorMessage.isEmpty) return const SizedBox.shrink();
+            return Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 10.0,
+              ),
+              decoration: BoxDecoration(
+                color: ColorApp.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12.0),
+                border: Border.all(
+                  color: ColorApp.primary.withValues(alpha: 0.18),
+                ),
+              ),
+              child: Text(
+                errorMessage,
+                style: primary500.copyWith(
+                  fontSize: 12.5,
+                  color: ColorApp.primary,
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 4.0),
           Obx(() {
             if (controller.isLoadingProvinsi.value) {
               return const LinearProgressIndicator();
@@ -205,18 +238,22 @@ class ShalatScreen extends GetView<ShalatController> {
     final isToday = jadwal.tanggalLengkap == todayStr;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
+      margin: const EdgeInsets.only(bottom: 18.0),
       decoration: BoxDecoration(
         color: ColorApp.white,
         borderRadius: BorderRadius.circular(16.0),
-        border: isToday
-            ? Border.all(color: ColorApp.primary, width: 1.5)
-            : Border.all(color: Colors.transparent),
+        border: Border.all(
+          color: isToday
+              ? ColorApp.primary
+              : ColorApp.primary.withValues(alpha: 0.12),
+          width: 1.5,
+        ),
+        // Hard offset shadow — chunky 3D (kreate.gg).
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isToday ? 0.08 : 0.03),
-            blurRadius: isToday ? 10.0 : 6.0,
-            offset: const Offset(0, 3),
+            color: ColorApp.primary.withValues(alpha: isToday ? 0.22 : 0.12),
+            offset: const Offset(0, 4),
+            blurRadius: 0,
           ),
         ],
       ),
@@ -271,8 +308,11 @@ class ShalatScreen extends GetView<ShalatController> {
               Container(
                 padding: const EdgeInsets.all(12.0),
                 decoration: BoxDecoration(
-                  color: ColorApp.secondary.withValues(alpha: 0.5),
+                  color: ColorApp.primary.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(
+                    color: ColorApp.primary.withValues(alpha: 0.10),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -325,7 +365,6 @@ class ShalatScreen extends GetView<ShalatController> {
   }
 }
 
-
 // Kartu waktu sholat berikutnya + hitung mundur yang berdetak tiap detik.
 class _NextPrayerCard extends StatefulWidget {
   const _NextPrayerCard();
@@ -376,14 +415,15 @@ class _NextPrayerCardState extends State<_NextPrayerCard> {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xff0d4e34), ColorApp.primary],
+            colors: [Color(0xff11623f), Color(0xff2f9e69)],
           ),
           borderRadius: BorderRadius.circular(24.0),
-          boxShadow: [
+          boxShadow: const [
+            // Hard offset shadow — chunky 3D (kreate.gg).
             BoxShadow(
-              color: ColorApp.primary.withValues(alpha: 0.3),
-              blurRadius: 16.0,
-              offset: const Offset(0, 6),
+              color: Color(0xff0a3d29),
+              offset: Offset(0, 6),
+              blurRadius: 0,
             ),
           ],
         ),

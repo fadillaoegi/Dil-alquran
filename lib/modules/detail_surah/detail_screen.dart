@@ -312,94 +312,98 @@ class _QariToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 18.0),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 8,
-            bottom: -8,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _detailCardBaseShadowColor,
-                borderRadius: BorderRadius.circular(16.0),
+    return _PressableScale(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 18.0),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 8,
+              bottom: -8,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _detailCardBaseShadowColor,
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
               ),
             ),
-          ),
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
-            decoration: BoxDecoration(
-              color: ColorApp.white,
-              borderRadius: BorderRadius.circular(14.0),
-              border: Border.all(color: _detailCardBorderColor, width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorApp.primary.withValues(alpha: 0.03),
-                  offset: const Offset(0, 2),
-                  blurRadius: 8,
-                  spreadRadius: -2,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.record_voice_over_rounded,
-                    color: ColorApp.primary, size: 20),
-                const SizedBox(width: 8.0),
-                Text(
-                  'Qari:',
-                  style: primary700.copyWith(fontSize: 12.5),
-                ),
-                const SizedBox(width: 10.0),
-                Expanded(
-                  child: Obx(() {
-                    final selectedName = controller.qariOptions.firstWhere(
-                          (element) => element['id'] == controller.selectedQari,
-                          orElse: () => {'name': ''},
-                        )['name'] ??
-                        '';
-
-                    return SearchDropdown(
-                      hintText: "Pilih Qari",
-                      selectedValue: selectedName,
-                      items: controller.qariOptions
-                          .map((e) => e['name'] ?? '')
-                          .toList(),
-                      onSelected: (name) {
-                        final selectedOption = controller.qariOptions.firstWhere(
-                          (element) => element['name'] == name,
-                          orElse: () => {'id': ''},
-                        );
-                        if (selectedOption['id'] != null &&
-                            selectedOption['id']!.isNotEmpty) {
-                          controller.changeQari(selectedOption['id']!);
-                        }
-                      },
-                      emptyText: "Qari tidak ditemukan",
-                    );
-                  }),
-                ),
-                Obx(
-                  () => IconButton(
-                    onPressed:
-                        controller.isPlaying ? controller.stopAudio : null,
-                    icon: Icon(
-                      Icons.stop_circle_outlined,
-                      color: controller.isPlaying
-                          ? ColorApp.primary
-                          : ColorApp.black.withValues(alpha: 0.35),
-                    ),
-                    tooltip: 'Stop Audio',
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+              decoration: BoxDecoration(
+                color: ColorApp.white,
+                borderRadius: BorderRadius.circular(14.0),
+                border: Border.all(color: _detailCardBorderColor, width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: ColorApp.primary.withValues(alpha: 0.03),
+                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                    spreadRadius: -2,
                   ),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.record_voice_over_rounded,
+                      color: ColorApp.primary, size: 20),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    'Qari:',
+                    style: primary700.copyWith(fontSize: 12.5),
+                  ),
+                  const SizedBox(width: 10.0),
+                  Expanded(
+                    child: Obx(() {
+                      final selectedName = controller.qariOptions.firstWhere(
+                            (element) =>
+                                element['id'] == controller.selectedQari,
+                            orElse: () => {'name': ''},
+                          )['name'] ??
+                          '';
+
+                      return SearchDropdown(
+                        hintText: "Pilih Qari",
+                        selectedValue: selectedName,
+                        items: controller.qariOptions
+                            .map((e) => e['name'] ?? '')
+                            .toList(),
+                        onSelected: (name) {
+                          final selectedOption =
+                              controller.qariOptions.firstWhere(
+                            (element) => element['name'] == name,
+                            orElse: () => {'id': ''},
+                          );
+                          if (selectedOption['id'] != null &&
+                              selectedOption['id']!.isNotEmpty) {
+                            controller.changeQari(selectedOption['id']!);
+                          }
+                        },
+                        emptyText: "Qari tidak ditemukan",
+                      );
+                    }),
+                  ),
+                  Obx(
+                    () => IconButton(
+                      onPressed:
+                          controller.isPlaying ? controller.stopAudio : null,
+                      icon: Icon(
+                        Icons.stop_circle_outlined,
+                        color: controller.isPlaying
+                            ? ColorApp.primary
+                            : ColorApp.black.withValues(alpha: 0.35),
+                      ),
+                      tooltip: 'Stop Audio',
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -413,63 +417,65 @@ class _LastReadBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 18.0),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 8,
-            bottom: -8,
-            child: DecoratedBox(
+    return _PressableScale(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 18.0),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 8,
+              bottom: -8,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _detailCardBaseShadowColor,
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(14.0),
               decoration: BoxDecoration(
-                color: _detailCardBaseShadowColor,
-                borderRadius: BorderRadius.circular(16.0),
+                color: ColorApp.white,
+                borderRadius: BorderRadius.circular(14.0),
+                border: Border.all(
+                  color: _detailCardBorderColor,
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ColorApp.primary.withValues(alpha: 0.03),
+                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                    spreadRadius: -2,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.bookmark_rounded,
+                      color: ColorApp.primary, size: 20),
+                  const SizedBox(width: 10.0),
+                  Expanded(
+                    child: Text(
+                      summary,
+                      style: black600.copyWith(fontSize: 12.0),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: onTap,
+                    child: Text(
+                      'Ke Ayat',
+                      style: primary700.copyWith(fontSize: 12.0),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(14.0),
-            decoration: BoxDecoration(
-              color: ColorApp.white,
-              borderRadius: BorderRadius.circular(14.0),
-              border: Border.all(
-                color: _detailCardBorderColor,
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorApp.primary.withValues(alpha: 0.03),
-                  offset: const Offset(0, 2),
-                  blurRadius: 8,
-                  spreadRadius: -2,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.bookmark_rounded,
-                    color: ColorApp.primary, size: 20),
-                const SizedBox(width: 10.0),
-                Expanded(
-                  child: Text(
-                    summary,
-                    style: black600.copyWith(fontSize: 12.0),
-                  ),
-                ),
-                TextButton(
-                  onPressed: onTap,
-                  child: Text(
-                    'Ke Ayat',
-                    style: primary700.copyWith(fontSize: 12.0),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -493,132 +499,133 @@ class _SurahHeaderCard extends StatelessWidget {
     final versesCount = data.jumlahAyat ?? 0;
     final revelation = data.tempatTurun ?? 'Mekah';
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 22.0),
-      padding: const EdgeInsets.all(22.0),
-      decoration: BoxDecoration(
-        color: ColorApp.white,
-        borderRadius: BorderRadius.circular(24.0),
-        border: Border.all(
-          color: ColorApp.primary.withValues(alpha: 0.12),
-          width: 1.5,
-        ),
-        boxShadow: [
-          // Hard offset shadow hijau — tema chunky (kreate.gg).
-          BoxShadow(
-            color: ColorApp.primary.withValues(alpha: 0.18),
-            offset: const Offset(0, 6),
-            blurRadius: 0,
+    return _PressableScale(
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 22.0),
+        padding: const EdgeInsets.all(22.0),
+        decoration: BoxDecoration(
+          color: ColorApp.white,
+          borderRadius: BorderRadius.circular(24.0),
+          border: Border.all(
+            color: ColorApp.primary.withValues(alpha: 0.12),
+            width: 1.5,
           ),
-        ],
-      ),
-      child: Column(
+          boxShadow: [
+            BoxShadow(
+              color: ColorApp.primary.withValues(alpha: 0.18),
+              offset: const Offset(0, 6),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(nameLatin, style: primary700.copyWith(fontSize: 22.0)),
+            const SizedBox(height: 4.0),
+            Text(
+              meaning,
+              style: black500.copyWith(
+                fontSize: 14.0,
+                color: ColorApp.black.withValues(alpha: 0.72),
+              ),
+            ),
+            const SizedBox(height: 10.0),
+            Text(
+              arabicName,
+              style: const TextStyle(
+                color: ColorApp.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 34.0,
+              ),
+            ),
+            const SizedBox(height: 10.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(nameLatin, style: primary700.copyWith(fontSize: 22.0)),
-                const SizedBox(height: 4.0),
-                Text(
-                  meaning,
-                  style: black500.copyWith(
-                    fontSize: 14.0,
-                    color: ColorApp.black.withValues(alpha: 0.72),
-                  ),
-                ),
-                const SizedBox(height: 10.0),
-                Text(
-                  arabicName,
-                  style: const TextStyle(
-                    color: ColorApp.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 34.0,
-                  ),
-                ),
-                const SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _pillText(revelation),
-                    const SizedBox(width: 8.0),
-                    _pillText('$versesCount Ayat'),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Obx(() {
-                  final isCurrentPlaylistActive = controller.audioCtrl
-                      .isPlaylistActive('surah', data.nomor ?? 0);
-                  final isPlaying = controller.audioCtrl.isPlaying.value &&
-                      isCurrentPlaylistActive;
-                  final isLoading = controller.audioCtrl.isLoading.value &&
-                      isCurrentPlaylistActive;
-
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16.0),
-                      boxShadow: const [
-                        // Hard offset shadow — tombol chunky (kreate.gg).
-                        BoxShadow(
-                          color: Color(0xff0c3f2a),
-                          offset: Offset(0, 4),
-                          blurRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        final urls = verseItems
-                            .map((item) {
-                              return item.audio?[controller.selectedQari] ??
-                                  (item.audio != null && item.audio!.isNotEmpty
-                                      ? item.audio!.values.first
-                                      : '');
-                            })
-                            .where((url) => url.isNotEmpty)
-                            .toList();
-
-                        final keys =
-                            verseItems.map((item) => item.verseKey).toList();
-
-                        controller.playPlaylist(urls: urls, keys: keys);
-                      },
-                      icon: isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                  color: ColorApp.white, strokeWidth: 2),
-                            )
-                          : Icon(
-                              isPlaying
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
-                              color: ColorApp.white,
-                              size: 20,
-                            ),
-                      label: Text(
-                        isLoading
-                            ? 'Memuat...'
-                            : (isPlaying ? 'Jeda Surah' : 'Putar Surah Penuh'),
-                        style: const TextStyle(
-                          color: ColorApp.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14.0,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorApp.primary,
-                        foregroundColor: ColorApp.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
-                        ),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24.0, vertical: 14.0),
-                      ),
-                    ),
-                  );
-                }),
+                _pillText(revelation),
+                const SizedBox(width: 8.0),
+                _pillText('$versesCount Ayat'),
               ],
             ),
+            const SizedBox(height: 16.0),
+            Obx(() {
+              final isCurrentPlaylistActive = controller.audioCtrl
+                  .isPlaylistActive('surah', data.nomor ?? 0);
+              final isPlaying = controller.audioCtrl.isPlaying.value &&
+                  isCurrentPlaylistActive;
+              final isLoading = controller.audioCtrl.isLoading.value &&
+                  isCurrentPlaylistActive;
+
+              return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                  boxShadow: const [
+                    // Hard offset shadow — tombol chunky (kreate.gg).
+                    BoxShadow(
+                      color: Color(0xff0c3f2a),
+                      offset: Offset(0, 4),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final urls = verseItems
+                        .map((item) {
+                          return item.audio?[controller.selectedQari] ??
+                              (item.audio != null && item.audio!.isNotEmpty
+                                  ? item.audio!.values.first
+                                  : '');
+                        })
+                        .where((url) => url.isNotEmpty)
+                        .toList();
+
+                    final keys =
+                        verseItems.map((item) => item.verseKey).toList();
+
+                    controller.playPlaylist(urls: urls, keys: keys);
+                  },
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              color: ColorApp.white, strokeWidth: 2),
+                        )
+                      : Icon(
+                          isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: ColorApp.white,
+                          size: 20,
+                        ),
+                  label: Text(
+                    isLoading
+                        ? 'Memuat...'
+                        : (isPlaying ? 'Jeda Surah' : 'Putar Surah Penuh'),
+                    style: const TextStyle(
+                      color: ColorApp.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14.0,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorApp.primary,
+                    foregroundColor: ColorApp.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0, vertical: 14.0),
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 
@@ -661,143 +668,148 @@ class _JuzHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final DetailSurahController controller = Get.find<DetailSurahController>();
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 18.0),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 10,
-            bottom: -10,
-            child: DecoratedBox(
+    return _PressableScale(
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 18.0),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 10,
+              bottom: -10,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _detailCardBaseShadowColor,
+                  borderRadius: BorderRadius.circular(24.0),
+                ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
-                color: _detailCardBaseShadowColor,
-                borderRadius: BorderRadius.circular(24.0),
-              ),
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              color: ColorApp.white,
-              borderRadius: BorderRadius.circular(22.0),
-              border: Border.all(
-                color: _detailCardBorderColor,
-                width: 1.25,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: ColorApp.primary.withValues(alpha: 0.04),
-                  offset: const Offset(0, 2),
-                  blurRadius: 10,
-                  spreadRadius: -2,
+                color: ColorApp.white,
+                borderRadius: BorderRadius.circular(22.0),
+                border: Border.all(
+                  color: _detailCardBorderColor,
+                  width: 1.25,
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Juz ${juzDetail.number}',
-                    style: primary700.copyWith(fontSize: 24.0)),
-                const SizedBox(height: 6.0),
-                Text(
-                  '${juzDetail.startSurahName} - ${juzDetail.endSurahName}',
-                  style: black500.copyWith(
-                    fontSize: 13.0,
-                    color: ColorApp.black.withValues(alpha: 0.72),
+                boxShadow: [
+                  BoxShadow(
+                    color: ColorApp.primary.withValues(alpha: 0.04),
+                    offset: const Offset(0, 2),
+                    blurRadius: 10,
+                    spreadRadius: -2,
                   ),
-                ),
-                const SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10.0, vertical: 6.0),
-                      decoration: BoxDecoration(
-                        color: ColorApp.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(20.0),
-                        border: Border.all(
-                          color: ColorApp.primary.withValues(alpha: 0.14),
-                        ),
-                      ),
-                      child: Text(
-                        'Total ${juzDetail.totalAyat} ayat',
-                        style: primary600.copyWith(fontSize: 12.0),
-                      ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Juz ${juzDetail.number}',
+                      style: primary700.copyWith(fontSize: 24.0)),
+                  const SizedBox(height: 6.0),
+                  Text(
+                    '${juzDetail.startSurahName} - ${juzDetail.endSurahName}',
+                    style: black500.copyWith(
+                      fontSize: 13.0,
+                      color: ColorApp.black.withValues(alpha: 0.72),
                     ),
-                    Obx(() {
-                      final isCurrentPlaylistActive = controller.audioCtrl
-                          .isPlaylistActive('juz', juzDetail.number);
-                      final isPlaying = controller.audioCtrl.isPlaying.value &&
-                          isCurrentPlaylistActive;
-                      final isLoading = controller.audioCtrl.isLoading.value &&
-                          isCurrentPlaylistActive;
-
-                      return ElevatedButton.icon(
-                        onPressed: () {
-                          final urls = verseItems
-                              .map((item) {
-                                return item.audio?[controller.selectedQari] ??
-                                    (item.audio != null &&
-                                            item.audio!.isNotEmpty
-                                        ? item.audio!.values.first
-                                        : '');
-                              })
-                              .where((url) => url.isNotEmpty)
-                              .toList();
-
-                          final keys =
-                              verseItems.map((item) => item.verseKey).toList();
-
-                          controller.playPlaylist(urls: urls, keys: keys);
-                        },
-                        icon: isLoading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                    color: ColorApp.white, strokeWidth: 2),
-                              )
-                            : Icon(
-                                isPlaying
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                color: ColorApp.white,
-                                size: 18,
-                              ),
-                        label: Text(
-                          isLoading
-                              ? 'Memuat...'
-                              : (isPlaying ? 'Jeda Juz' : 'Putar Juz'),
-                          style: const TextStyle(
-                            color: ColorApp.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12.0,
+                  ),
+                  const SizedBox(height: 10.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10.0, vertical: 6.0),
+                        decoration: BoxDecoration(
+                          color: ColorApp.primary.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(20.0),
+                          border: Border.all(
+                            color: ColorApp.primary.withValues(alpha: 0.14),
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ColorApp.primary,
-                          foregroundColor: ColorApp.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                          ),
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0, vertical: 8.0),
+                        child: Text(
+                          'Total ${juzDetail.totalAyat} ayat',
+                          style: primary600.copyWith(fontSize: 12.0),
                         ),
-                      );
-                    }),
-                  ],
-                ),
-              ],
+                      ),
+                      Obx(() {
+                        final isCurrentPlaylistActive = controller.audioCtrl
+                            .isPlaylistActive('juz', juzDetail.number);
+                        final isPlaying =
+                            controller.audioCtrl.isPlaying.value &&
+                                isCurrentPlaylistActive;
+                        final isLoading =
+                            controller.audioCtrl.isLoading.value &&
+                                isCurrentPlaylistActive;
+
+                        return ElevatedButton.icon(
+                          onPressed: () {
+                            final urls = verseItems
+                                .map((item) {
+                                  return item.audio?[controller.selectedQari] ??
+                                      (item.audio != null &&
+                                              item.audio!.isNotEmpty
+                                          ? item.audio!.values.first
+                                          : '');
+                                })
+                                .where((url) => url.isNotEmpty)
+                                .toList();
+
+                            final keys = verseItems
+                                .map((item) => item.verseKey)
+                                .toList();
+
+                            controller.playPlaylist(urls: urls, keys: keys);
+                          },
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                      color: ColorApp.white, strokeWidth: 2),
+                                )
+                              : Icon(
+                                  isPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  color: ColorApp.white,
+                                  size: 18,
+                                ),
+                          label: Text(
+                            isLoading
+                                ? 'Memuat...'
+                                : (isPlaying ? 'Jeda Juz' : 'Putar Juz'),
+                            style: const TextStyle(
+                              color: ColorApp.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.0,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ColorApp.primary,
+                            foregroundColor: ColorApp.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 8.0),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -826,132 +838,169 @@ class _AyatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 18.0),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          if (!isLastRead)
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 10,
-              bottom: -10,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: _detailCardBaseShadowColor,
-                  borderRadius: BorderRadius.circular(18.0),
-                ),
-              ),
-            ),
-          Container(
-            padding: const EdgeInsets.all(18.0),
-            decoration: BoxDecoration(
-              color: isLastRead
-                  ? ColorApp.primary.withValues(alpha: 0.04)
-                  : ColorApp.white,
-              borderRadius: BorderRadius.circular(16.0),
-              boxShadow: isLastRead
-                  ? const []
-                  : [
-                      BoxShadow(
-                        color: ColorApp.primary.withValues(alpha: 0.03),
-                        offset: const Offset(0, 2),
-                        blurRadius: 10,
-                        spreadRadius: -2,
-                      ),
-                    ],
-              border: Border.all(
-                color: isLastRead
-                    ? ColorApp.primary.withValues(alpha: 0.35)
-                    : _detailCardBorderColor,
-                width: isLastRead ? 1.4 : 1.2,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    if (isLastRead)
-                      Container(
-                        margin: const EdgeInsets.only(right: 8.0),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 4.0),
-                        decoration: BoxDecoration(
-                          color: ColorApp.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                        child: Text(
-                          'Terakhir dibaca',
-                          style: primary700.copyWith(fontSize: 10.5),
-                        ),
-                      ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(title,
-                              style: primary700.copyWith(fontSize: 12.0)),
-                          Text(subtitle,
-                              style: black400.copyWith(fontSize: 11.0)),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: onPlayTap,
-                      icon: Icon(
-                        isPlaying
-                            ? Icons.pause_circle_filled_rounded
-                            : Icons.play_circle_fill_rounded,
-                        color: isPlaying ? ColorApp.accent : ColorApp.primary,
-                        size: 30,
-                      ),
-                      tooltip: isPlaying ? 'Stop' : 'Play',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10.0),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    arabText,
-                    style: const TextStyle(
-                      color: ColorApp.black,
-                      height: 2.0,
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
+    return _PressableScale(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 18.0),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            if (!isLastRead)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 10,
+                bottom: -10,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _detailCardBaseShadowColor,
+                    borderRadius: BorderRadius.circular(18.0),
                   ),
                 ),
-                if (latinText.isNotEmpty) ...[
+              ),
+            Container(
+              padding: const EdgeInsets.all(18.0),
+              decoration: BoxDecoration(
+                color: isLastRead
+                    ? ColorApp.primary.withValues(alpha: 0.04)
+                    : ColorApp.white,
+                borderRadius: BorderRadius.circular(16.0),
+                boxShadow: isLastRead
+                    ? const []
+                    : [
+                        BoxShadow(
+                          color: ColorApp.primary.withValues(alpha: 0.03),
+                          offset: const Offset(0, 2),
+                          blurRadius: 10,
+                          spreadRadius: -2,
+                        ),
+                      ],
+                border: Border.all(
+                  color: isLastRead
+                      ? ColorApp.primary.withValues(alpha: 0.35)
+                      : _detailCardBorderColor,
+                  width: isLastRead ? 1.4 : 1.2,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (isLastRead)
+                        Container(
+                          margin: const EdgeInsets.only(right: 8.0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0, vertical: 4.0),
+                          decoration: BoxDecoration(
+                            color: ColorApp.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          child: Text(
+                            'Terakhir dibaca',
+                            style: primary700.copyWith(fontSize: 10.5),
+                          ),
+                        ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(title,
+                                style: primary700.copyWith(fontSize: 12.0)),
+                            Text(subtitle,
+                                style: black400.copyWith(fontSize: 11.0)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: onPlayTap,
+                        icon: Icon(
+                          isPlaying
+                              ? Icons.pause_circle_filled_rounded
+                              : Icons.play_circle_fill_rounded,
+                          color: isPlaying ? ColorApp.accent : ColorApp.primary,
+                          size: 30,
+                        ),
+                        tooltip: isPlaying ? 'Stop' : 'Play',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10.0),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      arabText,
+                      style: const TextStyle(
+                        color: ColorApp.black,
+                        height: 2.0,
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.right,
+                      textDirection: TextDirection.rtl,
+                    ),
+                  ),
+                  if (latinText.isNotEmpty) ...[
+                    const SizedBox(height: 10.0),
+                    Text(
+                      latinText,
+                      style: TextStyle(
+                        color: ColorApp.primary.withValues(alpha: 0.85),
+                        fontSize: 12.5,
+                        fontStyle: FontStyle.italic,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 10.0),
                   Text(
-                    latinText,
+                    translationText,
                     style: TextStyle(
-                      color: ColorApp.primary.withValues(alpha: 0.85),
-                      fontSize: 12.5,
-                      fontStyle: FontStyle.italic,
-                      height: 1.4,
+                      color: ColorApp.black.withValues(alpha: 0.8),
+                      fontSize: 13.5,
+                      height: 1.5,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ],
-                const SizedBox(height: 10.0),
-                Text(
-                  translationText,
-                  style: TextStyle(
-                    color: ColorApp.black.withValues(alpha: 0.8),
-                    fontSize: 13.5,
-                    height: 1.5,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PressableScale extends StatefulWidget {
+  const _PressableScale({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_PressableScale> createState() => _PressableScaleState();
+}
+
+class _PressableScaleState extends State<_PressableScale> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (!mounted) return;
+    if (_pressed != value) {
+      setState(() => _pressed = value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => _setPressed(true),
+      onPointerUp: (_) => _setPressed(false),
+      onPointerCancel: (_) => _setPressed(false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
       ),
     );
   }

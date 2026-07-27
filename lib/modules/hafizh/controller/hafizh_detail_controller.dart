@@ -46,8 +46,12 @@ class HafizhDetailController extends GetxController {
   final RxString activeVerseKey = ''.obs; // "surah:ayat"
   final RxBool isPlaying = false.obs;
 
-  static const List<int> repeatOptions = [1, 3, 5, 7, 10];
-  static const List<double> speedOptions = [0.75, 1.0, 1.5];
+  static const List<int> repeatOptions = [3, 5, 10];
+  static const List<double> speedOptions = [0.75, 1.0, 1.5, 2.0];
+
+  // Daftar ayat lengkap (belum difilter rentang) — untuk ganti rentang in-place.
+  final List<HafizhVerse> _allVerses = [];
+  int get totalAyat => _allVerses.length;
 
   final AudioPlayer _player = AudioPlayer();
   static const String _qari = '05';
@@ -97,7 +101,10 @@ class HafizhDetailController extends GetxController {
               ),
             )
             .toList();
-        verses.assignAll(_filterSelectedRange(juzVerses));
+        _allVerses
+          ..clear()
+          ..addAll(juzVerses);
+        verses.assignAll(_filterSelectedRange(_allVerses));
       } else {
         final detail = await HomeSource.fetchDetailSurah(number.toString());
         _title.value = detail.namaLatin ?? "Hafalan";
@@ -110,7 +117,10 @@ class HafizhDetailController extends GetxController {
               ),
             )
             .toList();
-        verses.assignAll(_filterSelectedRange(allAyat));
+        _allVerses
+          ..clear()
+          ..addAll(allAyat);
+        verses.assignAll(_filterSelectedRange(_allVerses));
       }
     } finally {
       _isLoading.value = false;
@@ -119,6 +129,23 @@ class HafizhDetailController extends GetxController {
 
   // Muat ulang ayat (untuk pull-to-refresh).
   Future<void> reload() => _load();
+
+  // Terapkan rentang ayat baru tanpa fetch ulang (dari panel muraja'ah).
+  Future<void> applyRange(int start, int end) async {
+    startAyat = start;
+    endAyat = end;
+    _normalizeRange();
+    await stop();
+    verses.assignAll(_filterSelectedRange(_allVerses));
+  }
+
+  // Kembalikan ke seluruh ayat.
+  Future<void> clearRange() async {
+    startAyat = null;
+    endAyat = null;
+    await stop();
+    verses.assignAll(_filterSelectedRange(_allVerses));
+  }
 
   void _listen() {
     _player.onPlayerComplete.listen((_) => _onComplete());
