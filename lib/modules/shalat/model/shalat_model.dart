@@ -38,4 +38,20 @@ class ShalatModel {
     maghrib = json['maghrib'];
     isya = json['isya'];
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'tanggal': tanggal,
+      'tanggal_lengkap': tanggalLengkap,
+      'hari': hari,
+      'imsak': imsak,
+      'subuh': subuh,
+      'terbit': terbit,
+      'dhuha': dhuha,
+      'dzuhur': dzuhur,
+      'ashar': ashar,
+      'maghrib': maghrib,
+      'isya': isya,
+    };
+  }
 }

@@ -63,13 +63,18 @@ class ShalatScreen extends GetView<ShalatController> {
         final todayStr =
             "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
-        var startIndex =
-            empty ? 0 : jadwal.indexWhere((j) => j.tanggalLengkap == todayStr);
-        if (startIndex == -1) startIndex = 0;
-        final dayCount = empty ? 0 : jadwal.length - startIndex;
+        final todayIndex =
+            empty ? -1 : jadwal.indexWhere((j) => j.tanggalLengkap == todayStr);
+        // Mulai daftar dari HARI SETELAH hari ini — kartu hari ini sudah
+        // diwakili oleh kartu ringkasan (_NextPrayerCard) di atas.
+        final startIndex = todayIndex == -1 ? 0 : todayIndex + 1;
+        final dayCount =
+            empty ? 0 : (jadwal.length - startIndex).clamp(0, jadwal.length);
 
         // 1 item untuk kartu lokasi + konten (loading/empty/hero+title+hari).
-        final contentCount = (loading || empty) ? 1 : (dayCount + 2);
+        // Judul "Jadwal Berikutnya" hanya muncul bila ada hari berikutnya.
+        final contentCount =
+            (loading || empty) ? 1 : (dayCount > 0 ? dayCount + 2 : 1);
 
         return RefreshIndicator(
           color: ColorApp.primary,

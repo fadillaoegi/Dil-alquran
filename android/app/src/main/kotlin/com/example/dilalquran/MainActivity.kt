@@ -1,20 +1,26 @@
 package com.fldev.dilalquran
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.net.Uri
-import io.flutter.embedding.android.FlutterActivity
+import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
+import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+class MainActivity : AudioServiceActivity() {
     private val channelName = "dilalquran/ringtone"
+    private val powerChannelName = "dilalquran/power"
     private val pickRequestCode = 4231
     private var pendingResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        configurePowerChannel(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -73,6 +79,53 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    // Channel untuk membebaskan aplikasi dari optimasi baterai agar
+    // alarm/notifikasi shalat tetap berjalan meski aplikasi ditutup.
+    private fun configurePowerChannel(flutterEngine: FlutterEngine) {
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, powerChannelName)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "isIgnoringBatteryOptimizations" -> {
+                        result.success(isIgnoringBatteryOptimizations())
+                    }
+
+                    "requestIgnoreBatteryOptimizations" -> {
+                        if (isIgnoringBatteryOptimizations()) {
+                            result.success(true)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            @Suppress("BatteryLife")
+                            val intent = Intent(
+                                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                Uri.parse("package:$packageName")
+                            )
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            // Fallback: buka daftar pengaturan optimasi baterai.
+                            try {
+                                startActivity(
+                                    Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                )
+                                result.success(true)
+                            } catch (e2: Exception) {
+                                result.success(false)
+                            }
+                        }
+                    }
+
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    private fun isIgnoringBatteryOptimizations(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
+        val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+        return pm?.isIgnoringBatteryOptimizations(packageName) ?: true
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

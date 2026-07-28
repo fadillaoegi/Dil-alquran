@@ -1,6 +1,39 @@
 import 'package:dilalquran/themes/colors.dart';
 import 'package:flutter/material.dart';
 
+// ============================================================
+// FONT ARAB (Amiri, gaya Naskh) — khusus untuk tulisan Arab:
+// ayat Al-Qur'an, doa, dan dzikir. Sengaja DIBEDAKAN dari teks
+// Latin/Indonesia (sans-serif) agar mudah dipisahkan mata.
+// ============================================================
+const String arabicFontFamily = 'Amiri';
+
+// Ayat Al-Qur'an — besar & lega, height longgar agar harakat jelas.
+const TextStyle arabicQuran = TextStyle(
+  fontFamily: arabicFontFamily,
+  color: ColorApp.black,
+  fontSize: 26.0,
+  height: 2.0,
+  fontWeight: FontWeight.w700,
+);
+
+// Teks Arab pada doa & dzikir.
+const TextStyle arabicBody = TextStyle(
+  fontFamily: arabicFontFamily,
+  color: ColorApp.black,
+  fontSize: 26.0,
+  height: 1.9,
+  fontWeight: FontWeight.w700,
+);
+
+// Nama surah dalam tulisan Arab (mis. di header).
+const TextStyle arabicTitle = TextStyle(
+  fontFamily: arabicFontFamily,
+  color: ColorApp.white,
+  fontSize: 24.0,
+  fontWeight: FontWeight.w700,
+);
+
 // NOTE: FONT POPPINS WHITE COLOR
 const TextStyle white400 =
     TextStyle(color: Colors.white, fontWeight: FontWeight.w400);

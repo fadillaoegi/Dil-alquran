@@ -534,10 +534,12 @@ class _SurahHeaderCard extends StatelessWidget {
             Text(
               arabicName,
               style: const TextStyle(
+                fontFamily: arabicFontFamily,
                 color: ColorApp.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 34.0,
               ),
+              textDirection: TextDirection.rtl,
             ),
             const SizedBox(height: 10.0),
             Row(
@@ -929,12 +931,7 @@ class _AyatCard extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: Text(
                       arabText,
-                      style: const TextStyle(
-                        color: ColorApp.black,
-                        height: 2.0,
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: arabicQuran,
                       textAlign: TextAlign.right,
                       textDirection: TextDirection.rtl,
                     ),

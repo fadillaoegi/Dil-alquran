@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:dilalquran/modules/data/sources/shalat_source.dart';
 import 'package:dilalquran/modules/shalat/model/shalat_model.dart';
 import 'package:dilalquran/services/notification_service.dart';
+import 'package:dilalquran/services/power_service.dart';
 import 'package:dilalquran/services/ringtone_picker.dart';
 import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +30,19 @@ class ShalatController extends GetxController {
   final RxString locationErrorMessage = "".obs;
 
   final RxBool isNotificationEnabled = false.obs;
-  // 'adzan' | 'device' | 'custom'
+  static const String notificationModeAdzan = "adzan";
+  static const String notificationModeDevice = "device";
+  static const String notificationModeCustom = "custom";
+  static const String notificationModeSilent = "silent";
+  static const String notificationModeOff = "off";
+  static const List<String> notificationModes = [
+    notificationModeAdzan,
+    notificationModeDevice,
+    notificationModeCustom,
+    notificationModeSilent,
+    notificationModeOff,
+  ];
+  // Legacy/default sound mode.
   final RxString notificationSound = "adzan".obs;
   // Suara pilihan dari HP (ringtone/MP3) untuk soundType 'custom'.
   final RxString customSoundUri = "".obs;
@@ -42,17 +57,36 @@ class ShalatController extends GetxController {
     "Isya",
   ];
 
-  // Peta waktu sholat mana saja yang notifikasinya diaktifkan.
-  // Default: semua aktif, agar perilaku lama tetap sama.
-  final RxMap<String, bool> enabledPrayers = <String, bool>{
-    for (final prayer in prayerNames) prayer: true,
+  // Setelan notifikasi per waktu sholat.
+  final RxMap<String, String> prayerNotificationModes = <String, String>{
+    for (final prayer in prayerNames) prayer: notificationModeAdzan,
   }.obs;
+
+  // Status apakah aplikasi sudah dikecualikan dari optimasi baterai (Android).
+  // Bila false, alarm/notifikasi shalat berisiko dimatikan OS saat app ditutup.
+  final RxBool isIgnoringBatteryOptimization = true.obs;
 
   @override
   void onInit() {
     super.onInit();
     _loadPreferences();
     fetchProvinsi();
+    refreshBatteryOptimizationStatus();
+  }
+
+  // Segarkan status pengecualian optimasi baterai (dipanggil saat masuk layar
+  // dan setelah kembali dari dialog izin).
+  Future<void> refreshBatteryOptimizationStatus() async {
+    isIgnoringBatteryOptimization.value =
+        await PowerManager.isIgnoringBatteryOptimizations();
+  }
+
+  // Minta agar aplikasi berjalan bebas di latar belakang (dialog sistem).
+  Future<void> requestBackgroundPermission() async {
+    await PowerManager.requestIgnoreBatteryOptimizations();
+    // Beri jeda agar status ter-update setelah user menutup dialog.
+    await Future.delayed(const Duration(milliseconds: 400));
+    await refreshBatteryOptimizationStatus();
   }
 
   Future<void> _loadPreferences() async {
@@ -64,11 +98,29 @@ class ShalatController extends GetxController {
     customSoundUri.value = prefs.getString('notif_custom_uri') ?? "";
     customSoundTitle.value = prefs.getString('notif_custom_title') ?? "";
 
-    // Jika belum pernah disimpan, biarkan default (semua aktif).
-    final savedPrayers = prefs.getStringList('notif_prayers');
-    if (savedPrayers != null) {
+    final savedPrayerModes = prefs.getString('notif_prayer_modes');
+    if (savedPrayerModes != null && savedPrayerModes.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(savedPrayerModes);
+        if (decoded is Map) {
+          for (final prayer in prayerNames) {
+            final mode = decoded[prayer]?.toString();
+            if (mode == "alarm") {
+              prayerNotificationModes[prayer] = notificationModeDevice;
+            } else if (notificationModes.contains(mode)) {
+              prayerNotificationModes[prayer] = mode!;
+            }
+          }
+        }
+      } catch (_) {
+        // fallback ke preferensi lama
+      }
+    } else {
+      final savedPrayers = prefs.getStringList('notif_prayers');
       for (final prayer in prayerNames) {
-        enabledPrayers[prayer] = savedPrayers.contains(prayer);
+        final enabled = savedPrayers == null || savedPrayers.contains(prayer);
+        prayerNotificationModes[prayer] =
+            enabled ? notificationSound.value : notificationModeOff;
       }
     }
   }
@@ -83,8 +135,12 @@ class ShalatController extends GetxController {
     await prefs.setString('notif_custom_title', customSoundTitle.value);
 
     final enabledList =
-        prayerNames.where((prayer) => enabledPrayers[prayer] == true).toList();
+        prayerNames.where((prayer) => isPrayerEnabled(prayer)).toList();
     await prefs.setStringList('notif_prayers', enabledList);
+    await prefs.setString(
+      'notif_prayer_modes',
+      jsonEncode(prayerNotificationModes),
+    );
   }
 
   Future<void> fetchProvinsi() async {
@@ -233,6 +289,38 @@ class ShalatController extends GetxController {
     showAppSnackbar(title, message, isError: !success);
   }
 
+  static const Map<String, String> _areaAliases = {
+    'nanggroe aceh darussalam': 'aceh',
+    'special capital region of jakarta': 'dki jakarta',
+    'jakarta special capital region': 'dki jakarta',
+    'jakarta': 'dki jakarta',
+    'special region of yogyakarta': 'di yogyakarta',
+    'yogyakarta special region': 'di yogyakarta',
+    'yogyakarta': 'di yogyakarta',
+    'west java': 'jawa barat',
+    'central java': 'jawa tengah',
+    'east java': 'jawa timur',
+    'west sumatra': 'sumatera barat',
+    'north sumatra': 'sumatera utara',
+    'south sumatra': 'sumatera selatan',
+    'riau islands': 'kepulauan riau',
+    'bangka belitung islands': 'kepulauan bangka belitung',
+    'special region of aceh': 'aceh',
+    'west kalimantan': 'kalimantan barat',
+    'south kalimantan': 'kalimantan selatan',
+    'central kalimantan': 'kalimantan tengah',
+    'east kalimantan': 'kalimantan timur',
+    'north kalimantan': 'kalimantan utara',
+    'west nusa tenggara': 'nusa tenggara barat',
+    'east nusa tenggara': 'nusa tenggara timur',
+    'west sulawesi': 'sulawesi barat',
+    'south sulawesi': 'sulawesi selatan',
+    'central sulawesi': 'sulawesi tengah',
+    'southeast sulawesi': 'sulawesi tenggara',
+    'north sulawesi': 'sulawesi utara',
+    'west papua': 'papua barat',
+  };
+
   String _normalizeAreaName(String value) {
     var normalized = value.toLowerCase().trim();
     const replacements = <String, String>{
@@ -251,7 +339,7 @@ class ShalatController extends GetxController {
     normalized = normalized.replaceAll('&', ' dan ');
     normalized = normalized.replaceAll(RegExp(r'[^a-z0-9]+'), ' ');
     normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim();
-    return normalized;
+    return _areaAliases[normalized] ?? normalized;
   }
 
   String _findClosestMatch(String query, List<String> list) {
@@ -259,7 +347,8 @@ class ShalatController extends GetxController {
 
     final normalizedQuery = _normalizeAreaName(query);
     final queryCompact = normalizedQuery.replaceAll(' ', '');
-    final queryTokens = normalizedQuery.split(' ').where((e) => e.isNotEmpty);
+    final queryTokens =
+        normalizedQuery.split(' ').where((e) => e.isNotEmpty).toList();
 
     for (final item in list) {
       final normalizedItem = _normalizeAreaName(item);
@@ -271,15 +360,32 @@ class ShalatController extends GetxController {
       }
     }
 
+    String bestItem = "";
+    int bestScore = 0;
     for (final item in list) {
       final normalizedItem = _normalizeAreaName(item);
-      final itemTokens = normalizedItem.split(' ').where((e) => e.isNotEmpty);
-      final hasAllTokens = queryTokens.every(
-        (token) => itemTokens.any((itemToken) => itemToken.startsWith(token)),
-      );
-      if (hasAllTokens) return item;
+      final itemTokens =
+          normalizedItem.split(' ').where((e) => e.isNotEmpty).toList();
+      var score = 0;
+
+      for (final token in queryTokens) {
+        if (itemTokens.any(
+          (itemToken) =>
+              itemToken == token ||
+              itemToken.startsWith(token) ||
+              token.startsWith(itemToken),
+        )) {
+          score++;
+        }
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestItem = item;
+      }
     }
 
+    if (bestScore > 0) return bestItem;
     return "";
   }
 
@@ -345,6 +451,7 @@ class ShalatController extends GetxController {
     try {
       final result = await _source.getJadwal(provinsi, kabkota);
       listJadwal.assignAll(result);
+      await _notificationService.cachePrayerSchedule(result);
 
       if (isNotificationEnabled.value) {
         _scheduleAllNotifications();
@@ -364,6 +471,13 @@ class ShalatController extends GetxController {
 
     if (value) {
       await _notificationService.requestPermissions();
+
+      // Pastikan aplikasi dibebaskan dari optimasi baterai agar notifikasi
+      // tetap berjalan meski aplikasi ditutup (khususnya OEM agresif).
+      await refreshBatteryOptimizationStatus();
+      if (!isIgnoringBatteryOptimization.value) {
+        await requestBackgroundPermission();
+      }
 
       // Jika lokasi belum dipilih, tidak ada jadwal untuk dijadwalkan.
       if (selectedKabKota.value.isEmpty) {
@@ -433,40 +547,105 @@ class ShalatController extends GetxController {
     }
   }
 
+  Future<bool> ensureCustomSoundSelected() async {
+    final previousUri = customSoundUri.value;
+    await pickCustomSound();
+    return customSoundUri.value.isNotEmpty &&
+            customSoundUri.value != previousUri
+        ? true
+        : customSoundUri.value.isNotEmpty;
+  }
+
   // Coba bunyikan notifikasi sesuai suara terpilih.
   Future<void> testNotificationSound() async {
     await _notificationService.testNotification(
-      soundType: notificationSound.value,
+      soundType: activePrayerModes.firstWhere(
+        (mode) => mode != notificationModeOff,
+        orElse: () => notificationModeAdzan,
+      ),
       customSoundUri: customSoundUri.value,
     );
   }
 
   // Aktif/nonaktifkan notifikasi untuk satu waktu sholat tertentu.
   Future<void> togglePrayer(String prayer, bool value) async {
-    enabledPrayers[prayer] = value;
-    _savePreferences();
-    if (isNotificationEnabled.value) {
-      _scheduleAllNotifications();
+    await setPrayerNotificationMode(
+      prayer,
+      value ? notificationModeAdzan : notificationModeOff,
+    );
+  }
+
+  Future<void> setPrayerNotificationMode(String prayer, String mode) async {
+    if (mode == notificationModeCustom) {
+      final hasCustomSound = await ensureCustomSoundSelected();
+      if (!hasCustomSound) return;
     }
+    prayerNotificationModes[prayer] = mode;
+    await _savePreferences();
+    if (isNotificationEnabled.value) {
+      await _scheduleAllNotifications();
+    }
+  }
+
+  Future<void> previewPrayerNotificationMode(String prayer, String mode) async {
+    var previewMode = mode;
+    if (mode == notificationModeCustom) {
+      final hasCustomSound = await ensureCustomSoundSelected();
+      if (!hasCustomSound) return;
+      previewMode = notificationModeCustom;
+    }
+    if (previewMode == notificationModeOff) return;
+    await _notificationService.testNotification(
+      soundType: previewMode,
+      customSoundUri: customSoundUri.value,
+      title: "Tes $prayer",
+      body: "Preview notifikasi untuk waktu shalat $prayer.",
+    );
   }
 
   // Pilih semua / kosongkan semua waktu sholat sekaligus.
   Future<void> setAllPrayers(bool value) async {
     for (final prayer in prayerNames) {
-      enabledPrayers[prayer] = value;
+      prayerNotificationModes[prayer] =
+          value ? notificationModeAdzan : notificationModeOff;
     }
-    _savePreferences();
+    await _savePreferences();
     if (isNotificationEnabled.value) {
-      _scheduleAllNotifications();
+      await _scheduleAllNotifications();
     }
   }
 
+  bool isPrayerEnabled(String prayer) =>
+      prayerNotificationModes[prayer] != notificationModeOff;
+
+  List<String> get activePrayerModes => prayerNames
+      .map((prayer) => prayerNotificationModes[prayer] ?? "")
+      .toList();
+
   bool get allPrayersEnabled =>
-      prayerNames.every((prayer) => enabledPrayers[prayer] == true);
+      prayerNames.every((prayer) => isPrayerEnabled(prayer));
 
   // ---- Ringkasan untuk tampilan ----
   int get enabledPrayerCount =>
-      prayerNames.where((prayer) => enabledPrayers[prayer] == true).length;
+      prayerNames.where((prayer) => isPrayerEnabled(prayer)).length;
+
+  String prayerModeLabel(String prayer) {
+    switch (prayerNotificationModes[prayer]) {
+      case notificationModeDevice:
+        return "Suara ringtone system";
+      case notificationModeCustom:
+        return customSoundTitle.value.isNotEmpty
+            ? customSoundTitle.value
+            : "Suara chose file";
+      case notificationModeSilent:
+        return "Tanpa suara (notif saja)";
+      case notificationModeOff:
+        return "Nonaktif";
+      case notificationModeAdzan:
+      default:
+        return "Suara adzan";
+    }
+  }
 
   String get soundLabel {
     switch (notificationSound.value) {
@@ -477,7 +656,7 @@ class ShalatController extends GetxController {
             ? customSoundTitle.value
             : "Suara HP";
       default:
-        return "Suara Sistem";
+        return "Suara ringtone system";
     }
   }
 
@@ -542,7 +721,7 @@ class ShalatController extends GetxController {
     }
   }
 
-  void _scheduleAllNotifications() async {
+  Future<void> _scheduleAllNotifications() async {
     await _cancelPrayerNotifications();
 
     final now = DateTime.now();
@@ -561,19 +740,20 @@ class ShalatController extends GetxController {
 
       for (var entry in times.entries) {
         if (entry.value == null) continue;
-        // Lewati waktu sholat yang notifikasinya dimatikan user.
-        if (enabledPrayers[entry.key] != true) continue;
+        final prayerMode =
+            prayerNotificationModes[entry.key] ?? notificationModeAdzan;
+        if (prayerMode == notificationModeOff) continue;
         try {
           // Format dari API misal: "2026-06-01" dan jam "04:36"
           DateTime dt =
               DateTime.parse("${jadwal.tanggalLengkap} ${entry.value}:00");
           if (dt.isAfter(now)) {
-            _notificationService.schedulePrayer(
+            await _notificationService.schedulePrayer(
               idCounter++,
               "Waktu ${entry.key}",
               "Telah masuk waktu shalat ${entry.key} untuk wilayah ${selectedKabKota.value}.",
               dt,
-              notificationSound.value,
+              prayerMode,
               customSoundUri: customSoundUri.value,
             );
           }

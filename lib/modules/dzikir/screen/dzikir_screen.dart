@@ -124,28 +124,9 @@ class _DzikirScreenState extends State<DzikirScreen> {
 
         return Column(
           children: [
+            _buildDzikirBanner(dzikirList.length),
             Padding(
-              padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 0.0),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.brightness_5_rounded,
-                    size: 14.0,
-                    color: ColorApp.primary.withValues(alpha: 0.7),
-                  ),
-                  const SizedBox(width: 6.0),
-                  Text(
-                    "Dzikir harian · ${dzikirList.length} bacaan",
-                    style: primary400.copyWith(
-                      fontSize: 11.5,
-                      color: ColorApp.black.withValues(alpha: 0.55),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 0.0),
               child: FormSearch(
                 controller: _searchController,
                 onChanged: controller.onSearch,
@@ -330,6 +311,101 @@ class _DzikirScreenState extends State<DzikirScreen> {
           ],
         );
       }),
+    );
+  }
+
+  // Banner hero Dzikir bergaya chunky 3D (gradient hijau + hard offset shadow).
+  Widget _buildDzikirBanner(int count) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0.0),
+      child: Container(
+        padding: const EdgeInsets.all(18.0),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xff11623f), Color(0xff2f9e69)],
+          ),
+          borderRadius: BorderRadius.circular(22.0),
+          // Hard offset shadow — chunky 3D.
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0xff0a3d29),
+              offset: Offset(0, 6),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(13.0),
+              decoration: BoxDecoration(
+                color: ColorApp.white.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: ColorApp.white.withValues(alpha: 0.28),
+                  width: 1.5,
+                ),
+              ),
+              child: const Icon(
+                Icons.self_improvement_rounded,
+                color: ColorApp.white,
+                size: 28.0,
+              ),
+            ),
+            const SizedBox(width: 16.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Dzikir Harian",
+                    style: white700.copyWith(fontSize: 19.0),
+                  ),
+                  const SizedBox(height: 4.0),
+                  Text(
+                    "Perbanyak mengingat Allah di setiap waktu.",
+                    style: TextStyle(
+                      color: ColorApp.white.withValues(alpha: 0.85),
+                      fontSize: 12.5,
+                      height: 1.35,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 5.0),
+                    decoration: BoxDecoration(
+                      color: ColorApp.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(999.0),
+                      border: Border.all(
+                        color: ColorApp.white.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.menu_book_rounded,
+                          size: 13.0,
+                          color: ColorApp.white,
+                        ),
+                        const SizedBox(width: 6.0),
+                        Text(
+                          "$count bacaan",
+                          style: white700.copyWith(fontSize: 11.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -28,7 +28,7 @@ class ListSurahAyat extends StatelessWidget {
     final revelation = surah.tempatTurun ?? "Mekah";
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 18.0),
+      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 18.0),
       child: _PressableScale(
         child: Stack(
           clipBehavior: Clip.none,
@@ -207,7 +207,7 @@ class ListJuzCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 18.0),
+      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 18.0),
       child: _PressableScale(
         child: Stack(
           clipBehavior: Clip.none,

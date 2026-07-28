@@ -102,6 +102,15 @@ class DetailSurahController extends GetxController {
     // Hentikan pemutaran single ayat jika sedang aktif
     await stopAudio();
 
+    // Metadata untuk media notification (panel notifikasi + lock screen).
+    final String album = _category.value == QuranCategory.juz
+        ? "Juz ${_number.value}"
+        : "QS. ${_surahDetail.value.namaLatin ?? _number.value}";
+    final String qariName = qariOptions.firstWhere(
+      (q) => q['id'] == _selectedQari.value,
+      orElse: () => const {'name': 'Murottal'},
+    )['name']!;
+
     // Jalankan pemutaran playlist melalui global controller
     await audioCtrl.playPlaylist(
       urls: urls,
@@ -109,6 +118,8 @@ class DetailSurahController extends GetxController {
       type: type,
       parentNumber: _number.value,
       startIndex: 0,
+      album: album,
+      artist: qariName,
     );
   }
 

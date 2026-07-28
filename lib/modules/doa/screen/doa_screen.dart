@@ -143,7 +143,7 @@ class _DoaScreenState extends State<DoaScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 4.0),
               child: FormSearch(
                 controller: _searchController,
                 onChanged: controller.onSearch,
@@ -374,59 +374,11 @@ class _DoaScreenState extends State<DoaScreen> {
                 children: categories.map((category) {
                   final active = selected == category;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(999.0),
-                        onTap: () => controller.selectCategory(category),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          curve: Curves.easeOut,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14.0,
-                            vertical: 9.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: active ? ColorApp.primary : ColorApp.white,
-                            borderRadius: BorderRadius.circular(999.0),
-                            border: Border.all(
-                              color:
-                                  active ? ColorApp.primary : _cardBorderColor,
-                              width: 1.15,
-                            ),
-                            boxShadow: active
-                                ? [
-                                    BoxShadow(
-                                      color: ColorApp.primary.withValues(
-                                        alpha: 0.14,
-                                      ),
-                                      offset: const Offset(0, 4),
-                                      blurRadius: 10,
-                                      spreadRadius: -3,
-                                    ),
-                                  ]
-                                : [
-                                    BoxShadow(
-                                      color: ColorApp.primary.withValues(
-                                        alpha: 0.03,
-                                      ),
-                                      offset: const Offset(0, 2),
-                                      blurRadius: 8,
-                                      spreadRadius: -2,
-                                    ),
-                                  ],
-                          ),
-                          child: Text(
-                            category,
-                            style: TextStyle(
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.w700,
-                              color: active ? ColorApp.white : ColorApp.primary,
-                            ),
-                          ),
-                        ),
-                      ),
+                    padding: const EdgeInsets.only(right: 10.0, bottom: 6.0),
+                    child: _ChunkyCategoryChip(
+                      label: category,
+                      active: active,
+                      onTap: () => controller.selectCategory(category),
                     ),
                   );
                 }).toList(),
@@ -436,5 +388,79 @@ class _DoaScreenState extends State<DoaScreen> {
         ),
       );
     });
+  }
+}
+
+// Chip kategori bergaya chunky 3D: hard offset shadow (blurRadius 0) yang
+// mengempis saat ditekan, memberi kesan tombol timbul yang bisa dipencet.
+class _ChunkyCategoryChip extends StatefulWidget {
+  const _ChunkyCategoryChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  State<_ChunkyCategoryChip> createState() => _ChunkyCategoryChipState();
+}
+
+class _ChunkyCategoryChipState extends State<_ChunkyCategoryChip> {
+  bool _pressed = false;
+
+  void _set(bool v) {
+    if (mounted && _pressed != v) setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.active;
+    const double depth = 4.0;
+    final Color shadow = active
+        ? const Color(0xff0a3d29)
+        : ColorApp.primary.withValues(alpha: 0.20);
+
+    return Listener(
+      onPointerDown: (_) => _set(true),
+      onPointerUp: (_) => _set(false),
+      onPointerCancel: (_) => _set(false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 90),
+          curve: Curves.easeOut,
+          transform: Matrix4.translationValues(0, _pressed ? depth : 0, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+          decoration: BoxDecoration(
+            color: active ? ColorApp.primary : ColorApp.white,
+            borderRadius: BorderRadius.circular(14.0),
+            border: Border.all(
+              color: active
+                  ? const Color(0xff0d4e34)
+                  : ColorApp.primary.withValues(alpha: 0.25),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: shadow,
+                offset: Offset(0, _pressed ? 0.0 : depth),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: active ? ColorApp.white : ColorApp.primary,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

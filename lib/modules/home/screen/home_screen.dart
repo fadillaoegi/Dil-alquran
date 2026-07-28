@@ -48,30 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, color: ColorApp.white),
-            onPressed: () {
-              Get.defaultDialog(
-                title: "Tentang Aplikasi",
-                titleStyle: black700.copyWith(fontSize: 16.0),
-                middleText:
-                    "Pilih bacaan berdasarkan Surah atau Juz, lalu nikmati ayat dengan terjemah dan audio qari favoritmu.",
-                middleTextStyle: black400.copyWith(fontSize: 14.0),
-                backgroundColor: ColorApp.white,
-                radius: 16.0,
-                confirm: ElevatedButton(
-                  onPressed: () => Get.back(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorApp.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    "Tutup",
-                    style: TextStyle(color: ColorApp.white),
-                  ),
-                ),
-              );
-            },
+            onPressed: () => _showAboutDialog(context),
           ),
         ],
       ),
@@ -163,6 +140,197 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Dialog "Tentang Aplikasi" bergaya chunky 3D.
+  void _showAboutDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
+          child: Container(
+            padding: const EdgeInsets.all(22.0),
+            decoration: BoxDecoration(
+              color: ColorApp.white,
+              borderRadius: BorderRadius.circular(24.0),
+              border: Border.all(color: const Color(0xff0d4e34), width: 2.0),
+              // Hard offset shadow — chunky 3D.
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xff0c3f2a),
+                  offset: Offset(0, 8),
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xff11623f), Color(0xff2f9e69)],
+                          ),
+                          borderRadius: BorderRadius.circular(16.0),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0xff0a3d29),
+                              offset: Offset(0, 4),
+                              blurRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.auto_stories_rounded,
+                          color: ColorApp.white,
+                          size: 26.0,
+                        ),
+                      ),
+                      const SizedBox(width: 14.0),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Dil ~ AlQuran",
+                              style: dancing700.copyWith(
+                                fontSize: 24.0,
+                                color: ColorApp.black,
+                              ),
+                            ),
+                            Text(
+                              "Teman ibadah harianmu",
+                              style: black400.copyWith(
+                                fontSize: 12.0,
+                                color: ColorApp.black.withValues(alpha: 0.55),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18.0),
+                  Text(
+                    "Dil ~ AlQuran hadir untuk menemani ibadah harianmu dengan "
+                    "mendekatkan Al-Qur'an, waktu sholat, doa, dan hafalan dalam "
+                    "satu genggaman. Dirancang sederhana namun lengkap, agar "
+                    "membaca, mendengar, dan mengamalkan menjadi lebih mudah "
+                    "setiap hari. Semoga menjadi wasilah kebaikan dan amal "
+                    "jariyah bagi kita semua.",
+                    style: black400.copyWith(
+                      fontSize: 13.5,
+                      height: 1.55,
+                      color: ColorApp.black.withValues(alpha: 0.75),
+                    ),
+                  ),
+                  const SizedBox(height: 18.0),
+                  _aboutFeature(
+                    Icons.menu_book_rounded,
+                    "Baca & dengar Al-Qur'an per Surah maupun Juz, lengkap "
+                    "dengan terjemahan dan murottal dari qari pilihan.",
+                  ),
+                  _aboutFeature(
+                    Icons.access_time_filled_rounded,
+                    "Jadwal sholat akurat sesuai lokasimu dengan pengingat "
+                    "adzan yang tetap berjalan walau aplikasi ditutup.",
+                  ),
+                  _aboutFeature(
+                    Icons.volunteer_activism_rounded,
+                    "Kumpulan doa dan dzikir harian beserta penghitung tasbih.",
+                  ),
+                  _aboutFeature(
+                    Icons.psychology_alt_rounded,
+                    "Hafizh Qur'an untuk membantu menjaga dan melatih hafalan.",
+                  ),
+                  const SizedBox(height: 10.0),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(dialogContext).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 11.0,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xff11623f), Color(0xff2f9e69)],
+                          ),
+                          borderRadius: BorderRadius.circular(14.0),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0xff0a3d29),
+                              offset: Offset(0, 4),
+                              blurRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          "Tutup",
+                          style: white700.copyWith(fontSize: 13.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Baris fitur di dialog: badge ikon chunky + deskripsi.
+  Widget _aboutFeature(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              color: ColorApp.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12.0),
+              border: Border.all(
+                color: ColorApp.primary.withValues(alpha: 0.18),
+                width: 1.2,
+              ),
+            ),
+            child: Icon(icon, size: 18.0, color: ColorApp.primary),
+          ),
+          const SizedBox(width: 12.0),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2.0),
+              child: Text(
+                text,
+                style: black400.copyWith(
+                  fontSize: 12.5,
+                  height: 1.4,
+                  color: ColorApp.black.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _wrapRefresh(Widget child) {
     return RefreshIndicator(
       color: ColorApp.primary,
@@ -191,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: surahList.length,
-        padding: const EdgeInsets.only(bottom: 16.0),
+        padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
         itemBuilder: (context, index) {
           final surah = surahList[index];
           return ListSurahAyat(
@@ -232,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: juzList.length,
-        padding: const EdgeInsets.only(bottom: 16.0),
+        padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
         itemBuilder: (context, index) {
           final juz = juzList[index];
           return ListJuzCard(

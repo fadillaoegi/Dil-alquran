@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dilalquran/modules/shalat/controller/shalat_controller.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
@@ -34,6 +32,8 @@ class ShalatNotifScreen extends GetView<ShalatController> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 20.0),
+                _buildBackgroundCard(context),
                 const SizedBox(height: 20.0),
                 Row(
                   children: [
@@ -78,11 +78,7 @@ class ShalatNotifScreen extends GetView<ShalatController> {
                   ),
                 ),
                 const SizedBox(height: 12.0),
-                _buildPrayerChips(),
-                const SizedBox(height: 24.0),
-                Text("Nada Dering", style: primary700.copyWith(fontSize: 15.0)),
-                const SizedBox(height: 12.0),
-                _buildSoundOptions(),
+                _buildPrayerSettings(context),
                 const SizedBox(height: 24.0),
                 _buildTestButton(),
               ],
@@ -91,6 +87,124 @@ class ShalatNotifScreen extends GetView<ShalatController> {
         ],
       ),
     );
+  }
+
+  // Kartu status "berjalan di latar belakang" (pengecualian optimasi baterai).
+  // Memastikan notifikasi tetap muncul saat aplikasi ditutup.
+  Widget _buildBackgroundCard(BuildContext context) {
+    return Obx(() {
+      final ok = controller.isIgnoringBatteryOptimization.value;
+      final accent = ok ? ColorApp.primary : const Color(0xffd98a1f);
+      final bg = ok
+          ? ColorApp.primary.withValues(alpha: 0.06)
+          : const Color(0xfffdf3e2);
+      return Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(18.0),
+          border: Border.all(color: accent.withValues(alpha: 0.35), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.18),
+              offset: const Offset(0, 4),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10.0),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    ok
+                        ? Icons.verified_rounded
+                        : Icons.battery_alert_rounded,
+                    color: accent,
+                    size: 22.0,
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Berjalan di Latar Belakang",
+                        style: primary700.copyWith(
+                          fontSize: 14.5,
+                          color: ColorApp.black,
+                        ),
+                      ),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        ok
+                            ? "Aktif — notifikasi tetap berbunyi walau aplikasi ditutup."
+                            : "Belum aktif — OS bisa mematikan alarm saat aplikasi ditutup.",
+                        style: black400.copyWith(
+                          fontSize: 12.0,
+                          color: ColorApp.black.withValues(alpha: 0.6),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (!ok) ...[
+              const SizedBox(height: 14.0),
+              SizedBox(
+                width: double.infinity,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14.0),
+                    onTap: controller.requestBackgroundPermission,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(14.0),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0xff9c5f10),
+                            offset: Offset(0, 4),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.play_circle_fill_rounded,
+                            color: ColorApp.white,
+                            size: 18.0,
+                          ),
+                          const SizedBox(width: 8.0),
+                          Text(
+                            "Izinkan Berjalan di Latar Belakang",
+                            style: white700.copyWith(fontSize: 13.0),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildMasterToggle(BuildContext context) {
@@ -171,7 +285,8 @@ class ShalatNotifScreen extends GetView<ShalatController> {
               value: enabled,
               activeThumbColor: ColorApp.white,
               activeTrackColor: ColorApp.accent,
-              onChanged: (value) => controller.toggleNotification(value, context),
+              onChanged: (value) =>
+                  controller.toggleNotification(value, context),
             ),
           ],
         ),
@@ -216,71 +331,89 @@ class ShalatNotifScreen extends GetView<ShalatController> {
     "Isya": Icons.nightlight_round,
   };
 
-  Widget _buildPrayerChips() {
+  Widget _buildPrayerSettings(BuildContext context) {
     return Obx(
-      () => Wrap(
-        spacing: 10.0,
-        runSpacing: 10.0,
+      () => Column(
         children: ShalatController.prayerNames.map((prayer) {
-          final selected = controller.enabledPrayers[prayer] ?? true;
-          final fg = selected ? ColorApp.white : ColorApp.primary;
-          return GestureDetector(
-            onTap: () => controller.togglePrayer(prayer, !selected),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14.0, vertical: 10.0),
-              decoration: BoxDecoration(
-                color: selected ? ColorApp.primary : ColorApp.white,
-                borderRadius: BorderRadius.circular(14.0),
-                border: Border.all(
-                  color: selected
-                      ? ColorApp.primary
-                      : ColorApp.primary.withValues(alpha: 0.25),
-                  width: 1.5,
-                ),
-                // Chunky hard shadow saat terpilih.
-                boxShadow: selected
-                    ? const [
-                        BoxShadow(
-                          color: Color(0xff0c3f2a),
-                          offset: Offset(0, 3),
-                          blurRadius: 0,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _prayerIcons[prayer] ?? Icons.schedule_rounded,
-                    size: 16.0,
-                    color: fg,
+          final enabled = controller.isPrayerEnabled(prayer);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: GestureDetector(
+              onTap: () => _showPrayerModeDialog(context, prayer),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                padding: const EdgeInsets.all(14.0),
+                decoration: BoxDecoration(
+                  color: ColorApp.white,
+                  borderRadius: BorderRadius.circular(18.0),
+                  border: Border.all(
+                    color: enabled
+                        ? ColorApp.primary
+                        : ColorApp.primary.withValues(alpha: 0.14),
+                    width: 1.5,
                   ),
-                  const SizedBox(width: 8.0),
-                  Text(
-                    prayer,
-                    style: TextStyle(
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w700,
-                      color: fg,
+                  boxShadow: [
+                    BoxShadow(
+                      color: enabled
+                          ? ColorApp.primary.withValues(alpha: 0.18)
+                          : ColorApp.primary.withValues(alpha: 0.1),
+                      offset: const Offset(0, 4),
+                      blurRadius: 0,
                     ),
-                  ),
-                  // Centang muncul halus saat terpilih.
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    child: selected
-                        ? const Padding(
-                            padding: EdgeInsets.only(left: 6.0),
-                            child: Icon(Icons.check_rounded,
-                                size: 15.0, color: ColorApp.white),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10.0),
+                      decoration: BoxDecoration(
+                        color: enabled
+                            ? ColorApp.primary.withValues(alpha: 0.12)
+                            : ColorApp.secondary,
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: Icon(
+                        _prayerIcons[prayer] ?? Icons.schedule_rounded,
+                        size: 20.0,
+                        color: ColorApp.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 14.0),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(prayer,
+                              style: black600.copyWith(fontSize: 14.0)),
+                          const SizedBox(height: 3.0),
+                          Text(
+                            controller.prayerModeLabel(prayer),
+                            style: black400.copyWith(
+                              fontSize: 12.5,
+                              color: enabled
+                                  ? ColorApp.primary
+                                  : ColorApp.black.withValues(alpha: 0.45),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      enabled
+                          ? Icons.radio_button_checked_rounded
+                          : Icons.radio_button_off_rounded,
+                      color: enabled
+                          ? ColorApp.primary
+                          : ColorApp.black.withValues(alpha: 0.25),
+                    ),
+                    const SizedBox(width: 8.0),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: ColorApp.black.withValues(alpha: 0.3),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -289,110 +422,264 @@ class ShalatNotifScreen extends GetView<ShalatController> {
     );
   }
 
-  Widget _buildSoundOptions() {
-    return Obx(
-      () => Column(
-        children: [
-          _soundOption(
-            title: "Adzan",
-            subtitle: "Kumandang adzan penuh saat waktu sholat tiba",
-            value: "adzan",
-            icon: Icons.campaign_rounded,
-          ),
-          const SizedBox(height: 10.0),
-          _soundOption(
-            title: "Suara Sistem",
-            subtitle: "Nada notifikasi bawaan perangkat",
-            value: "device",
-            icon: Icons.notifications_rounded,
-          ),
-          // Pilih ringtone/MP3 dari HP — hanya Android.
-          if (Platform.isAndroid) ...[
-            const SizedBox(height: 10.0),
-            _soundOption(
-              title: "Suara dari HP",
-              subtitle: controller.notificationSound.value == 'custom' &&
-                      controller.customSoundTitle.value.isNotEmpty
-                  ? controller.customSoundTitle.value
-                  : "Pilih ringtone atau suara di perangkat",
-              value: "custom",
-              icon: Icons.library_music_rounded,
-              onTap: controller.pickCustomSound,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+  Future<void> _showPrayerModeDialog(
+    BuildContext context,
+    String prayer,
+  ) async {
+    final options = <Map<String, String>>[
+      {
+        'value': ShalatController.notificationModeAdzan,
+        'label': 'Suara adzan',
+      },
+      {
+        'value': ShalatController.notificationModeDevice,
+        'label': 'Suara ringtone system',
+      },
+      {
+        'value': ShalatController.notificationModeCustom,
+        'label': 'Suara chose file',
+      },
+      {
+        'value': ShalatController.notificationModeSilent,
+        'label': 'Tanpa suara (notif saja)',
+      },
+      {
+        'value': ShalatController.notificationModeOff,
+        'label': 'Nonaktif',
+      },
+    ];
 
-  Widget _soundOption({
-    required String title,
-    required String subtitle,
-    required String value,
-    required IconData icon,
-    VoidCallback? onTap,
-  }) {
-    final selected = controller.notificationSound.value == value;
-    return GestureDetector(
-      onTap: onTap ?? () => controller.changeNotificationSound(value),
-      child: Container(
-        padding: const EdgeInsets.all(14.0),
-        decoration: BoxDecoration(
-          color: ColorApp.white,
-          borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(
-            color: selected
-                ? ColorApp.primary
-                : ColorApp.primary.withValues(alpha: 0.12),
-            width: 1.5,
-          ),
-          // Hard offset shadow — chunky 3D (kreate.gg).
-          boxShadow: [
-            BoxShadow(
-              color: ColorApp.primary.withValues(alpha: selected ? 0.22 : 0.12),
-              offset: const Offset(0, 4),
-              blurRadius: 0,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10.0),
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Obx(() {
+          final selectedMode = controller.prayerNotificationModes[prayer] ??
+              ShalatController.notificationModeAdzan;
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
+            child: Container(
+              padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
-                color: ColorApp.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.0),
+                color: ColorApp.white,
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(color: const Color(0xff0d4e34), width: 2.0),
+                // Hard offset shadow — chunky 3D.
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0xff0c3f2a),
+                    offset: Offset(0, 8),
+                    blurRadius: 0,
+                  ),
+                ],
               ),
-              child: Icon(icon, color: ColorApp.primary, size: 22.0),
-            ),
-            const SizedBox(width: 14.0),
-            Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: black600.copyWith(fontSize: 14.0)),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: black400.copyWith(
-                      fontSize: 12.0,
-                      color: ColorApp.black.withValues(alpha: 0.55),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: ColorApp.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        child: const Icon(
+                          Icons.notifications_active_rounded,
+                          color: ColorApp.primary,
+                          size: 20.0,
+                        ),
+                      ),
+                      const SizedBox(width: 12.0),
+                      Expanded(
+                        child: Text(
+                          "Atur Notifikasi $prayer",
+                          style: primary700.copyWith(
+                            fontSize: 16.0,
+                            color: ColorApp.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18.0),
+                  ...options.map((option) {
+                    final value = option['value']!;
+                    final label = option['label']!;
+                    final selected = selectedMode == value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () async {
+                          await controller.setPrayerNotificationMode(
+                              prayer, value);
+                          if (dialogContext.mounted) {
+                            Navigator.of(dialogContext).pop();
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14.0, vertical: 12.0),
+                          decoration: BoxDecoration(
+                            gradient: selected
+                                ? const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xff11623f),
+                                      Color(0xff2f9e69),
+                                    ],
+                                  )
+                                : null,
+                            color: selected ? null : ColorApp.white,
+                            borderRadius: BorderRadius.circular(16.0),
+                            border: Border.all(
+                              color: selected
+                                  ? Colors.transparent
+                                  : ColorApp.primary.withValues(alpha: 0.18),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: selected
+                                    ? const Color(0xff0a3d29)
+                                    : ColorApp.primary.withValues(alpha: 0.14),
+                                offset: const Offset(0, 4),
+                                blurRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // Indikator pilih chunky.
+                              Container(
+                                width: 24.0,
+                                height: 24.0,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? ColorApp.white
+                                      : Colors.transparent,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: selected
+                                        ? ColorApp.white
+                                        : ColorApp.black.withValues(alpha: 0.3),
+                                    width: 2.0,
+                                  ),
+                                ),
+                                child: selected
+                                    ? const Icon(
+                                        Icons.check_rounded,
+                                        size: 16.0,
+                                        color: ColorApp.primary,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 14.0),
+                              Expanded(
+                                child: Text(
+                                  label,
+                                  style: black500.copyWith(
+                                    fontSize: 13.5,
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: selected
+                                        ? ColorApp.white
+                                        : ColorApp.black,
+                                  ),
+                                ),
+                              ),
+                              if (value !=
+                                  ShalatController.notificationModeOff)
+                                _dialogPlayButton(
+                                  selected: selected,
+                                  onTap: () async {
+                                    await controller
+                                        .previewPrayerNotificationMode(
+                                      prayer,
+                                      value,
+                                    );
+                                  },
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 4.0),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(dialogContext).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 22.0, vertical: 10.0),
+                        decoration: BoxDecoration(
+                          color: ColorApp.white,
+                          borderRadius: BorderRadius.circular(14.0),
+                          border: Border.all(
+                            color: ColorApp.primary.withValues(alpha: 0.4),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ColorApp.primary.withValues(alpha: 0.18),
+                              offset: const Offset(0, 4),
+                              blurRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          "Batal",
+                          style: primary700.copyWith(fontSize: 13.5),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(
-              selected
-                  ? Icons.radio_button_checked_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: selected
-                  ? ColorApp.primary
-                  : ColorApp.black.withValues(alpha: 0.3),
-            ),
-          ],
+          );
+        });
+      },
+    );
+  }
+
+  // Tombol preview ("Coba") chunky di dalam dialog. Menyesuaikan warna saat
+  // opsi terpilih (kartu hijau) vs belum (kartu putih).
+  Widget _dialogPlayButton({
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38.0,
+        height: 38.0,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected
+              ? ColorApp.white.withValues(alpha: 0.22)
+              : ColorApp.primary.withValues(alpha: 0.10),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: selected
+                ? ColorApp.white.withValues(alpha: 0.55)
+                : ColorApp.primary.withValues(alpha: 0.25),
+            width: 1.5,
+          ),
+        ),
+        child: Icon(
+          Icons.play_arrow_rounded,
+          size: 20.0,
+          color: selected ? ColorApp.white : ColorApp.primary,
         ),
       ),
     );
