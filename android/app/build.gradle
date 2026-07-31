@@ -35,7 +35,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.fldev.dilalquran"
-    compileSdk flutter.compileSdkVersion
+    // Target API 36 (Android 16) — memenuhi syarat target API level Google Play.
+    compileSdk 36
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -56,7 +57,7 @@ android {
         applicationId "com.fldev.dilalquran"
 
         minSdkVersion 24
-        targetSdkVersion 35
+        targetSdkVersion 36
 
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName

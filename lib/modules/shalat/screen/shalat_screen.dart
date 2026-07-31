@@ -67,7 +67,13 @@ class ShalatScreen extends GetView<ShalatController> {
             empty ? -1 : jadwal.indexWhere((j) => j.tanggalLengkap == todayStr);
         // Mulai daftar dari HARI SETELAH hari ini — kartu hari ini sudah
         // diwakili oleh kartu ringkasan (_NextPrayerCard) di atas.
-        final startIndex = todayIndex == -1 ? 0 : todayIndex + 1;
+        // Namun bila hari ini adalah data TERAKHIR (mis. akhir bulan, karena
+        // API jadwal bersifat bulanan), tetap tampilkan hari ini agar daftar
+        // tidak kosong.
+        final hasFutureDays = todayIndex != -1 && todayIndex + 1 < jadwal.length;
+        final startIndex = todayIndex == -1
+            ? 0
+            : (hasFutureDays ? todayIndex + 1 : todayIndex);
         final dayCount =
             empty ? 0 : (jadwal.length - startIndex).clamp(0, jadwal.length);
 
@@ -409,9 +415,10 @@ class _NextPrayerCardState extends State<_NextPrayerCard> {
     return Obx(() {
       final next = controller.nextPrayer;
       final today = controller.todaySchedule;
-      if (next == null) return const SizedBox.shrink();
+      if (next == null && today == null) return const SizedBox.shrink();
 
-      final remaining = next.time.difference(DateTime.now());
+      final remaining =
+          next != null ? next.time.difference(DateTime.now()) : Duration.zero;
 
       return Container(
         margin: const EdgeInsets.only(bottom: 16.0),
@@ -458,13 +465,15 @@ class _NextPrayerCardState extends State<_NextPrayerCard> {
                       ),
                       const SizedBox(height: 6.0),
                       Text(
-                        next.name,
+                        next?.name ?? "Selesai",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: white700.copyWith(fontSize: 28.0),
                       ),
                       Text(
-                        _formatTime(next.time),
+                        next != null
+                            ? _formatTime(next.time)
+                            : "Semua sholat hari ini sudah lewat",
                         style: white400.copyWith(
                           fontSize: 13.0,
                           color: ColorApp.white.withValues(alpha: 0.85),
@@ -535,7 +544,7 @@ class _NextPrayerCardState extends State<_NextPrayerCard> {
             ),
             if (today != null) ...[
               const SizedBox(height: 18.0),
-              _buildTodayPills(today, next.name),
+              _buildTodayPills(today, next?.name ?? ""),
             ],
           ],
         ),

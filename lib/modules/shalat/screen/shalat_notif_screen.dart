@@ -2,6 +2,7 @@ import 'package:dilalquran/modules/shalat/controller/shalat_controller.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class ShalatNotifScreen extends GetView<ShalatController> {
@@ -79,10 +80,54 @@ class ShalatNotifScreen extends GetView<ShalatController> {
                 ),
                 const SizedBox(height: 12.0),
                 _buildPrayerSettings(context),
+                const SizedBox(height: 24.0),
+                _buildTestScheduleButton(),
               ],
             );
           }),
         ],
+      ),
+    );
+  }
+
+  // Tombol diagnosa chunky: jadwalkan notifikasi tes 1 menit lagi untuk
+  // memastikan notifikasi terjadwal benar-benar muncul di perangkat.
+  Widget _buildTestScheduleButton() {
+    return GestureDetector(
+      onTap: controller.scheduleTestNotificationSoon,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 15.0),
+        decoration: BoxDecoration(
+          color: ColorApp.white,
+          borderRadius: BorderRadius.circular(16.0),
+          border: Border.all(
+            color: ColorApp.primary.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: ColorApp.primary.withValues(alpha: 0.18),
+              offset: const Offset(0, 5),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.timer_outlined,
+              color: ColorApp.primary,
+              size: 20.0,
+            ),
+            const SizedBox(width: 10.0),
+            Text(
+              "Tes Notifikasi Terjadwal (1 menit)",
+              style: primary700.copyWith(fontSize: 14.0),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -122,9 +167,7 @@ class ShalatNotifScreen extends GetView<ShalatController> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    ok
-                        ? Icons.verified_rounded
-                        : Icons.battery_alert_rounded,
+                    ok ? Icons.verified_rounded : Icons.battery_alert_rounded,
                     color: accent,
                     size: 22.0,
                   ),
@@ -431,11 +474,7 @@ class ShalatNotifScreen extends GetView<ShalatController> {
       },
       {
         'value': ShalatController.notificationModeDevice,
-        'label': 'Suara ringtone system',
-      },
-      {
-        'value': ShalatController.notificationModeCustom,
-        'label': 'Suara chose file',
+        'label': 'Suara ringtone sistem',
       },
       {
         'value': ShalatController.notificationModeSilent,
@@ -593,10 +632,12 @@ class ShalatNotifScreen extends GetView<ShalatController> {
                                   ),
                                 ),
                               ),
-                              if (value !=
-                                  ShalatController.notificationModeOff)
+                              if (value != ShalatController.notificationModeOff)
                                 _dialogPlayButton(
                                   selected: selected,
+                                  isPlaying: controller
+                                          .currentlyPlayingPreview.value ==
+                                      value,
                                   onTap: () async {
                                     await controller
                                         .previewPrayerNotificationMode(
@@ -614,31 +655,8 @@ class ShalatNotifScreen extends GetView<ShalatController> {
                   const SizedBox(height: 4.0),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: GestureDetector(
+                    child: _DialogCancelButton(
                       onTap: () => Navigator.of(dialogContext).pop(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 22.0, vertical: 10.0),
-                        decoration: BoxDecoration(
-                          color: ColorApp.white,
-                          borderRadius: BorderRadius.circular(14.0),
-                          border: Border.all(
-                            color: ColorApp.primary.withValues(alpha: 0.4),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ColorApp.primary.withValues(alpha: 0.18),
-                              offset: const Offset(0, 4),
-                              blurRadius: 0,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          "Batal",
-                          style: primary700.copyWith(fontSize: 13.5),
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -654,34 +672,116 @@ class ShalatNotifScreen extends GetView<ShalatController> {
   // opsi terpilih (kartu hijau) vs belum (kartu putih).
   Widget _dialogPlayButton({
     required bool selected,
+    required bool isPlaying,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 38.0,
-        height: 38.0,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected
-              ? ColorApp.white.withValues(alpha: 0.22)
-              : ColorApp.primary.withValues(alpha: 0.10),
-          shape: BoxShape.circle,
-          border: Border.all(
+    // Material + InkWell: memberi efek ripple (jelas bisa diklik), tooltip,
+    // dan haptic. Sebagai widget interaktif, tap-nya andal menang atas area
+    // baris di belakangnya (tidak ikut memilih & menutup dialog).
+    return Tooltip(
+      message: isPlaying ? "Hentikan suara" : "Tes suara notifikasi",
+      child: Material(
+        color: selected
+            ? ColorApp.white.withValues(alpha: 0.22)
+            : ColorApp.primary.withValues(alpha: 0.10),
+        shape: CircleBorder(
+          side: BorderSide(
             color: selected
                 ? ColorApp.white.withValues(alpha: 0.55)
                 : ColorApp.primary.withValues(alpha: 0.25),
             width: 1.5,
           ),
         ),
-        child: Icon(
-          Icons.play_arrow_rounded,
-          size: 20.0,
-          color: selected ? ColorApp.white : ColorApp.primary,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          splashColor: selected
+              ? ColorApp.white.withValues(alpha: 0.35)
+              : ColorApp.primary.withValues(alpha: 0.25),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap();
+          },
+          child: SizedBox(
+            width: 42.0,
+            height: 42.0,
+            child: Icon(
+              isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              size: 22.0,
+              color: selected ? ColorApp.white : ColorApp.primary,
+            ),
+          ),
         ),
       ),
     );
   }
 
   // Widget _buildTestButton() — dihapus
+}
+
+class _DialogCancelButton extends StatefulWidget {
+  const _DialogCancelButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  State<_DialogCancelButton> createState() => _DialogCancelButtonState();
+}
+
+class _DialogCancelButtonState extends State<_DialogCancelButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _pressed ? 0.97 : 1,
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: _pressed
+              ? ColorApp.primary.withValues(alpha: 0.06)
+              : ColorApp.white,
+          borderRadius: BorderRadius.circular(14.0),
+          border: Border.all(
+            color: ColorApp.primary.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: ColorApp.primary.withValues(alpha: 0.18),
+              offset: Offset(0, _pressed ? 2 : 4),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14.0),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: widget.onTap,
+            onHighlightChanged: (value) {
+              if (!mounted) return;
+              setState(() => _pressed = value);
+            },
+            splashColor: ColorApp.primary.withValues(alpha: 0.14),
+            highlightColor: ColorApp.primary.withValues(alpha: 0.08),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 22.0,
+                vertical: 10.0,
+              ),
+              child: Text(
+                "Batal",
+                style: primary700.copyWith(fontSize: 13.5),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

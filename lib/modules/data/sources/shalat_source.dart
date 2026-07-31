@@ -84,13 +84,25 @@ class ShalatSource {
     }
   }
 
-  Future<List<ShalatModel>> getJadwal(String provinsi, String kabkota) async {
+  Future<List<ShalatModel>> getJadwal(
+    String provinsi,
+    String kabkota, {
+    int? bulan,
+    int? tahun,
+  }) async {
     try {
+      final bodyMap = <String, dynamic>{
+        "provinsi": provinsi,
+        "kabkota": kabkota,
+      };
+      if (bulan != null) bodyMap["bulan"] = bulan;
+      if (tahun != null) bodyMap["tahun"] = tahun;
+
       final response = await http
           .post(
             Uri.parse(_baseUrl),
             headers: {"Content-Type": "application/json"},
-            body: jsonEncode({"provinsi": provinsi, "kabkota": kabkota}),
+            body: jsonEncode(bodyMap),
           )
           .timeout(const Duration(seconds: 15));
 

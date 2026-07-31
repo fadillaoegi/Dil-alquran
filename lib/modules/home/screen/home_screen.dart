@@ -2,10 +2,12 @@ import 'package:dilalquran/modules/download/download_controller.dart';
 import 'package:dilalquran/modules/home/controller/home_controller.dart';
 import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/services/connectivity_service.dart';
+import 'package:dilalquran/services/update_service.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:dilalquran/widgets/list_surahayat_widget.dart';
 import 'package:dilalquran/widgets/form_search_widget.dart';
+import 'package:dilalquran/widgets/update_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -21,6 +23,19 @@ class _HomeScreenState extends State<HomeScreen> {
   final DownloadController dl = Get.find<DownloadController>();
   final ConnectivityService conn = Get.find<ConnectivityService>();
   final TextEditingController searchTextController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdate();
+  }
+
+  // Cek pembaruan di Google Play; bila ada, tampilkan dialog update chunky 3D.
+  Future<void> _checkForUpdate() async {
+    final available = await UpdateService.isUpdateAvailable();
+    if (!mounted || !available) return;
+    showUpdateDialog(context);
+  }
 
   @override
   void dispose() {

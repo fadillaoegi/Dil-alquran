@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:dilalquran/modules/data/sources/shalat_source.dart';
 import 'package:dilalquran/modules/shalat/model/shalat_model.dart';
 import 'package:dilalquran/services/notification_service.dart';
@@ -38,7 +39,6 @@ class ShalatController extends GetxController {
   static const List<String> notificationModes = [
     notificationModeAdzan,
     notificationModeDevice,
-    notificationModeCustom,
     notificationModeSilent,
     notificationModeOff,
   ];
@@ -66,12 +66,76 @@ class ShalatController extends GetxController {
   // Bila false, alarm/notifikasi shalat berisiko dimatikan OS saat app ditutup.
   final RxBool isIgnoringBatteryOptimization = true.obs;
 
+  // Pemutar untuk pratinjau suara notifikasi di dialog (bisa play/pause).
+  AudioPlayer? _previewPlayer;
+  // Mode suara yang sedang diputar pratinjaunya ("" bila tidak ada).
+  final RxString previewingMode = "".obs;
+
+  AudioPlayer get _previewPlayerInstance => _previewPlayer ??= AudioPlayer();
+
   @override
   void onInit() {
     super.onInit();
     _loadPreferences();
     fetchProvinsi();
     refreshBatteryOptimizationStatus();
+    // Reset tombol ke ikon play saat pratinjau selesai.
+    _previewPlayerInstance.onPlayerComplete
+        .listen((_) => previewingMode.value = "");
+  }
+
+  @override
+  void onClose() {
+    _previewPlayer?.dispose();
+    super.onClose();
+  }
+
+  // Toggle pratinjau suara: bila mode ini sedang diputar → berhenti (jadi play),
+  // selain itu putar suaranya (jadi pause). Dipakai oleh tombol ▶/⏸ di dialog.
+  Future<void> togglePreview(String prayer, String mode) async {
+    // Ketuk lagi opsi yang sedang diputar → hentikan.
+    if (previewingMode.value == mode) {
+      await stopPreview();
+      return;
+    }
+
+    var m = mode;
+    if (mode == notificationModeCustom) {
+      final hasCustomSound = await ensureCustomSoundSelected();
+      if (!hasCustomSound) return;
+      m = notificationModeCustom;
+    }
+
+    await _previewPlayerInstance.stop();
+    try {
+      switch (m) {
+        case notificationModeAdzan:
+          previewingMode.value = m;
+          await _previewPlayerInstance
+              .play(AssetSource('notification/adzan.mp3'));
+          break;
+        case notificationModeDevice:
+          previewingMode.value = m;
+          await _previewPlayerInstance
+              .play(UrlSource('content://settings/system/notification_sound'));
+          break;
+        case notificationModeCustom:
+          if (customSoundUri.value.isEmpty) return;
+          previewingMode.value = m;
+          await _previewPlayerInstance.play(UrlSource(customSoundUri.value));
+          break;
+        default:
+          // 'silent'/'off' tidak ada suara untuk dipratinjau.
+          previewingMode.value = "";
+      }
+    } catch (_) {
+      previewingMode.value = "";
+    }
+  }
+
+  Future<void> stopPreview() async {
+    previewingMode.value = "";
+    await _previewPlayerInstance.stop();
   }
 
   // Segarkan status pengecualian optimasi baterai (dipanggil saat masuk layar
@@ -105,7 +169,7 @@ class ShalatController extends GetxController {
         if (decoded is Map) {
           for (final prayer in prayerNames) {
             final mode = decoded[prayer]?.toString();
-            if (mode == "alarm") {
+            if (mode == "alarm" || mode == notificationModeCustom) {
               prayerNotificationModes[prayer] = notificationModeDevice;
             } else if (notificationModes.contains(mode)) {
               prayerNotificationModes[prayer] = mode!;
@@ -449,9 +513,45 @@ class ShalatController extends GetxController {
     isLoadingJadwal.value = true;
     locationErrorMessage.value = "";
     try {
-      final result = await _source.getJadwal(provinsi, kabkota);
-      listJadwal.assignAll(result);
-      await _notificationService.cachePrayerSchedule(result);
+      final now = DateTime.now();
+      final result = await _source.getJadwal(
+        provinsi,
+        kabkota,
+        bulan: now.month,
+        tahun: now.year,
+      );
+
+      // Ambil juga data bulan berikutnya agar kartu "hari ini" dan
+      // nextPrayer tidak hilang di akhir bulan (karena API bersifat bulanan).
+      final nextMonth = DateTime(now.year, now.month + 1, 1);
+      try {
+        final nextMonthResult = await _source.getJadwal(
+          provinsi,
+          kabkota,
+          bulan: nextMonth.month,
+          tahun: nextMonth.year,
+        );
+        result.addAll(nextMonthResult);
+      } catch (_) {
+        // Gagal mengambil bulan depan bukan masalah kritis.
+      }
+
+      final mergedSchedules = <String, ShalatModel>{};
+      for (final jadwal in result) {
+        final key = jadwal.tanggalLengkap;
+        if (key == null || key.isEmpty) continue;
+        mergedSchedules[key] = jadwal;
+      }
+
+      final normalizedSchedules = mergedSchedules.values.toList()
+        ..sort((a, b) {
+          final aDate = a.tanggalLengkap ?? "";
+          final bDate = b.tanggalLengkap ?? "";
+          return aDate.compareTo(bDate);
+        });
+
+      listJadwal.assignAll(normalizedSchedules);
+      await _notificationService.cachePrayerSchedule(normalizedSchedules);
 
       if (isNotificationEnabled.value) {
         _scheduleAllNotifications();
@@ -467,7 +567,7 @@ class ShalatController extends GetxController {
 
   Future<void> toggleNotification(bool value, BuildContext context) async {
     isNotificationEnabled.value = value;
-    _savePreferences();
+    await _savePreferences();
 
     if (value) {
       await _notificationService.requestPermissions();
@@ -481,6 +581,8 @@ class ShalatController extends GetxController {
 
       // Jika lokasi belum dipilih, tidak ada jadwal untuk dijadwalkan.
       if (selectedKabKota.value.isEmpty) {
+        isNotificationEnabled.value = false;
+        await _savePreferences();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -567,6 +669,33 @@ class ShalatController extends GetxController {
     );
   }
 
+  // Diagnosa: jadwalkan notifikasi tes 1 menit dari sekarang untuk memastikan
+  // notifikasi TERJADWAL benar-benar muncul (memisahkan masalah kode vs OS).
+  Future<void> scheduleTestNotificationSoon() async {
+    await _notificationService.requestPermissions();
+    await refreshBatteryOptimizationStatus();
+    if (!isIgnoringBatteryOptimization.value) {
+      await requestBackgroundPermission();
+    }
+    final mode = activePrayerModes.firstWhere(
+      (m) => m != notificationModeOff,
+      orElse: () => notificationModeAdzan,
+    );
+    await _notificationService.scheduleTestInMinutes(
+      minutes: 1,
+      soundType: mode,
+      customSoundUri: customSoundUri.value,
+    );
+    final canRunInBackground = isIgnoringBatteryOptimization.value;
+    _snack(
+      "Tes Dijadwalkan",
+      canRunInBackground
+          ? "Notifikasi tes akan muncul 1 menit lagi. Kamu boleh menutup aplikasi untuk memastikan tetap berjalan."
+          : "Notifikasi tes tetap dijadwalkan 1 menit lagi, tetapi OS masih bisa menahannya saat aplikasi ditutup karena izin latar belakang belum aktif.",
+      success: true,
+    );
+  }
+
   // Aktif/nonaktifkan notifikasi untuk satu waktu sholat tertentu.
   Future<void> togglePrayer(String prayer, bool value) async {
     await setPrayerNotificationMode(
@@ -587,7 +716,18 @@ class ShalatController extends GetxController {
     }
   }
 
+  RxString currentlyPlayingPreview = ''.obs;
+
   Future<void> previewPrayerNotificationMode(String prayer, String mode) async {
+    if (currentlyPlayingPreview.value == mode) {
+      await _notificationService.cancelTestNotification();
+      currentlyPlayingPreview.value = '';
+      return;
+    }
+
+    // Pastikan izin notifikasi (Android 13+) sudah diberikan; tanpa ini
+    // preview tidak akan muncul/berbunyi.
+    await _notificationService.requestPermissions();
     var previewMode = mode;
     if (mode == notificationModeCustom) {
       final hasCustomSound = await ensureCustomSoundSelected();
@@ -595,12 +735,23 @@ class ShalatController extends GetxController {
       previewMode = notificationModeCustom;
     }
     if (previewMode == notificationModeOff) return;
+
+    currentlyPlayingPreview.value = mode;
+
     await _notificationService.testNotification(
       soundType: previewMode,
       customSoundUri: customSoundUri.value,
-      title: "Tes $prayer",
-      body: "Preview notifikasi untuk waktu shalat $prayer.",
+      title: "Tes Notifikasi $prayer",
+      body: "Preview suara notifikasi untuk waktu shalat $prayer.",
     );
+
+    // Otomatis reset icon pause kembali ke play setelah 5 detik
+    // (karena notifikasi lokal tidak memiliki callback saat suara selesai)
+    Future.delayed(const Duration(seconds: 5), () {
+      if (currentlyPlayingPreview.value == mode) {
+        currentlyPlayingPreview.value = '';
+      }
+    });
   }
 
   // Pilih semua / kosongkan semua waktu sholat sekaligus.
@@ -632,11 +783,7 @@ class ShalatController extends GetxController {
   String prayerModeLabel(String prayer) {
     switch (prayerNotificationModes[prayer]) {
       case notificationModeDevice:
-        return "Suara ringtone system";
-      case notificationModeCustom:
-        return customSoundTitle.value.isNotEmpty
-            ? customSoundTitle.value
-            : "Suara chose file";
+        return "Suara ringtone sistem";
       case notificationModeSilent:
         return "Tanpa suara (notif saja)";
       case notificationModeOff:
@@ -656,7 +803,7 @@ class ShalatController extends GetxController {
             ? customSoundTitle.value
             : "Suara HP";
       default:
-        return "Suara ringtone system";
+        return "Suara ringtone sistem";
     }
   }
 

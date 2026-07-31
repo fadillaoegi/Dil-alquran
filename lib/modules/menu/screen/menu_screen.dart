@@ -180,6 +180,22 @@ class _MenuScreenState extends State<MenuScreen>
                 },
               ),
             ),
+            _FadeSlideIn(
+              animation: _interval(0.78, 1.0),
+              child: CardMenu(
+                title: "Arah Kiblat",
+                subtitle: "Kompas penunjuk arah kiblat",
+                icon: Icons.explore_rounded,
+                gradientColors: const [
+                  Color(0xff0d4e34),
+                  ColorApp.primary,
+                  Color(0xff6bc58f),
+                ],
+                onTap: () {
+                  Get.toNamed(RouteScreen.qibla);
+                },
+              ),
+            ),
             const SizedBox(height: 28.0),
           ],
         ),

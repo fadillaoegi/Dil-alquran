@@ -89,6 +89,7 @@ class NotificationService {
     await android.deleteNotificationChannel('prayer_channel_adzan');
     await android.deleteNotificationChannel('prayer_channel_adzan_test');
     await android.deleteNotificationChannel('prayer_channel_adzan_v2');
+    await android.deleteNotificationChannel('prayer_channel_adzan_v3');
     await android.deleteNotificationChannel('prayer_channel_alarm');
     await android.deleteNotificationChannel('prayer_channel_device');
     await android.deleteNotificationChannel('prayer_channel_silent');
@@ -133,8 +134,9 @@ class NotificationService {
     );
   }
 
-  // ID channel adzan (v3: memakai suara adzan penuh ~3 menit, tidak terpotong).
-  static const String adzanChannelId = 'prayer_channel_adzan_v3';
+  // ID channel adzan (v4: adzan ~40 detik agar andal muncul & berbunyi di
+  // semua perangkat, termasuk MIUI/HyperOS yang membatasi suara panjang).
+  static const String adzanChannelId = 'prayer_channel_adzan_v4';
 
   Future<void> requestPermissions() async {
     // Android 13+: izin menampilkan notifikasi + izin exact alarm (Android 12+)
@@ -504,8 +506,8 @@ class NotificationService {
   Future<void> testNotification({
     String soundType = 'adzan',
     String? customSoundUri,
-    String title = 'Waktunya Salat (Tes Instan)',
-    String body = 'Ayo segera dirikan salat!',
+    String title = 'Tes Notifikasi',
+    String body = 'Notifikasi berfungsi dengan baik. Suara dan tampilan notifikasi sudah aktif.',
   }) async {
     await flutterLocalNotificationsPlugin.show(
       999,
@@ -513,5 +515,48 @@ class NotificationService {
       body,
       _prayerDetails(soundType, customUri: customSoundUri),
     );
+  }
+
+  Future<void> cancelTestNotification() async {
+    await flutterLocalNotificationsPlugin.cancel(999);
+  }
+
+  // Diagnosa: jadwalkan notifikasi tes beberapa menit dari sekarang untuk
+  // memastikan notifikasi TERJADWAL benar-benar muncul di perangkat (berbeda
+  // dari tes instan). Id 998 agar tidak bentrok dengan jadwal shalat (1..60),
+  // pengingat hafizh (5001), maupun tes instan (999).
+  Future<void> scheduleTestInMinutes({
+    int minutes = 1,
+    String soundType = 'adzan',
+    String? customSoundUri,
+  }) async {
+    final scheduled =
+        tz.TZDateTime.now(tz.local).add(Duration(minutes: minutes));
+    final details = _prayerDetails(soundType, customUri: customSoundUri);
+    try {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        998,
+        'Tes Notifikasi Terjadwal',
+        'Notifikasi terjadwal berfungsi dengan baik. Pengingat shalat akan muncul tepat waktu.',
+        scheduled,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (_) {
+      try {
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          998,
+          'Tes Notifikasi Terjadwal',
+          'Notifikasi terjadwal berfungsi dengan baik (mode inexact).',
+          scheduled,
+          details,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+      } catch (_) {}
+    }
   }
 }
