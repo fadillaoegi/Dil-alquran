@@ -84,9 +84,11 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>();
     if (android == null) return;
 
-    // Bersihkan channel adzan lama yang mungkin ter-cache dengan suara salah.
+    // Bersihkan channel adzan lama yang mungkin ter-cache dengan suara salah
+    // atau suara adzan versi terpotong (30 detik).
     await android.deleteNotificationChannel('prayer_channel_adzan');
     await android.deleteNotificationChannel('prayer_channel_adzan_test');
+    await android.deleteNotificationChannel('prayer_channel_adzan_v2');
     await android.deleteNotificationChannel('prayer_channel_alarm');
     await android.deleteNotificationChannel('prayer_channel_device');
     await android.deleteNotificationChannel('prayer_channel_silent');
@@ -131,8 +133,8 @@ class NotificationService {
     );
   }
 
-  // ID channel adzan (versi baru agar suara adzan pasti terpasang di device).
-  static const String adzanChannelId = 'prayer_channel_adzan_v2';
+  // ID channel adzan (v3: memakai suara adzan penuh ~3 menit, tidak terpotong).
+  static const String adzanChannelId = 'prayer_channel_adzan_v3';
 
   Future<void> requestPermissions() async {
     // Android 13+: izin menampilkan notifikasi + izin exact alarm (Android 12+)

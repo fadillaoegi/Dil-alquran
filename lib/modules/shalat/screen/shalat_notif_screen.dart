@@ -79,8 +79,6 @@ class ShalatNotifScreen extends GetView<ShalatController> {
                 ),
                 const SizedBox(height: 12.0),
                 _buildPrayerSettings(context),
-                const SizedBox(height: 24.0),
-                _buildTestButton(),
               ],
             );
           }),
@@ -685,47 +683,5 @@ class ShalatNotifScreen extends GetView<ShalatController> {
     );
   }
 
-  Widget _buildTestButton() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: ColorApp.white,
-        borderRadius: BorderRadius.circular(14.0),
-        border: Border.all(
-          color: ColorApp.primary.withValues(alpha: 0.5),
-          width: 1.5,
-        ),
-        // Hard offset shadow — tombol chunky (kreate.gg).
-        boxShadow: [
-          BoxShadow(
-            color: ColorApp.primary.withValues(alpha: 0.16),
-            offset: const Offset(0, 4),
-            blurRadius: 0,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14.0),
-          onTap: controller.testNotificationSound,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.volume_up_rounded,
-                    size: 18.0, color: ColorApp.primary),
-                const SizedBox(width: 8.0),
-                Text(
-                  "Coba Notifikasi Sekarang",
-                  style: primary700.copyWith(fontSize: 14.0),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildTestButton() — dihapus
 }
