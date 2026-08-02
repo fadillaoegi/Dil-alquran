@@ -570,7 +570,23 @@ class ShalatController extends GetxController {
     await _savePreferences();
 
     if (value) {
-      await _notificationService.requestPermissions();
+      final notificationsEnabled =
+          await _notificationService.requestPermissions();
+      if (!notificationsEnabled) {
+        isNotificationEnabled.value = false;
+        await _savePreferences();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Izin notifikasi belum diaktifkan. Izinkan notifikasi aplikasi terlebih dahulu.",
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
 
       // Pastikan aplikasi dibebaskan dari optimasi baterai agar notifikasi
       // tetap berjalan meski aplikasi ditutup (khususnya OEM agresif).
@@ -672,7 +688,18 @@ class ShalatController extends GetxController {
   // Diagnosa: jadwalkan notifikasi tes 1 menit dari sekarang untuk memastikan
   // notifikasi TERJADWAL benar-benar muncul (memisahkan masalah kode vs OS).
   Future<void> scheduleTestNotificationSoon() async {
-    await _notificationService.requestPermissions();
+    final notificationsEnabled =
+        await _notificationService.requestPermissions();
+    if (!notificationsEnabled) {
+      _snack(
+        "Notifikasi Belum Diizinkan",
+        "Android masih memblokir notifikasi aplikasi ini. Aktifkan dulu izin notifikasi di sistem.",
+      );
+      return;
+    }
+
+    final exactAlarmEnabled =
+        await _notificationService.canScheduleExactNotifications();
     await refreshBatteryOptimizationStatus();
     if (!isIgnoringBatteryOptimization.value) {
       await requestBackgroundPermission();
@@ -686,12 +713,23 @@ class ShalatController extends GetxController {
       soundType: mode,
       customSoundUri: customSoundUri.value,
     );
+    final testScheduled = await _notificationService.hasPendingNotification(998);
+    if (!testScheduled) {
+      _snack(
+        "Tes Gagal Dijadwalkan",
+        "Sistem belum menerima jadwal notifikasi tes. Cek izin alarm presisi dan notifikasi aplikasi.",
+      );
+      return;
+    }
+
     final canRunInBackground = isIgnoringBatteryOptimization.value;
     _snack(
       "Tes Dijadwalkan",
-      canRunInBackground
-          ? "Notifikasi tes akan muncul 1 menit lagi. Kamu boleh menutup aplikasi untuk memastikan tetap berjalan."
-          : "Notifikasi tes tetap dijadwalkan 1 menit lagi, tetapi OS masih bisa menahannya saat aplikasi ditutup karena izin latar belakang belum aktif.",
+      !exactAlarmEnabled
+          ? "Notifikasi tes masuk antrean, tetapi izin alarm presisi belum aktif. Di beberapa perangkat, tes 1 menit bisa terlambat atau tidak tepat waktu."
+          : canRunInBackground
+              ? "Notifikasi tes akan muncul 1 menit lagi. Kamu boleh menutup aplikasi untuk memastikan tetap berjalan."
+              : "Notifikasi tes tetap dijadwalkan 1 menit lagi, tetapi OS masih bisa menahannya saat aplikasi ditutup karena izin latar belakang belum aktif.",
       success: true,
     );
   }
@@ -727,7 +765,15 @@ class ShalatController extends GetxController {
 
     // Pastikan izin notifikasi (Android 13+) sudah diberikan; tanpa ini
     // preview tidak akan muncul/berbunyi.
-    await _notificationService.requestPermissions();
+    final notificationsEnabled =
+        await _notificationService.requestPermissions();
+    if (!notificationsEnabled) {
+      _snack(
+        "Notifikasi Belum Diizinkan",
+        "Preview tidak bisa ditampilkan karena izin notifikasi aplikasi masih diblokir.",
+      );
+      return;
+    }
     var previewMode = mode;
     if (mode == notificationModeCustom) {
       final hasCustomSound = await ensureCustomSoundSelected();

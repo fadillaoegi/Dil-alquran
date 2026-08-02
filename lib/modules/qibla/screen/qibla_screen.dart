@@ -311,6 +311,7 @@ class _QiblaScreenState extends State<QiblaScreen>
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _infoRow(
             Icons.explore_rounded,
@@ -358,39 +359,52 @@ class _QiblaScreenState extends State<QiblaScreen>
           break;
       }
       return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(Icons.adjust_rounded, size: 20.0, color: ColorApp.primary),
           const SizedBox(width: 12.0),
-          Text(
-            "Akurasi kompas",
-            style: primary400.copyWith(
-              fontSize: 13.5,
-              color: ColorApp.black.withValues(alpha: 0.6),
-            ),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: controller.startCalibration,
-            behavior: HitTestBehavior.opaque,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 9.0,
-                  height: 9.0,
-                  decoration: BoxDecoration(color: c, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 7.0),
-                Text(
-                  controller.accuracyLabel,
-                  style: primary700.copyWith(fontSize: 14.0, color: c),
-                ),
-                if (level == CompassAccuracy.low ||
-                    level == CompassAccuracy.medium) ...[
-                  const SizedBox(width: 6.0),
-                  Icon(Icons.compass_calibration_rounded, size: 16.0, color: c),
+          Expanded(
+            child: GestureDetector(
+              onTap: controller.startCalibration,
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Akurasi kompas",
+                    style: primary400.copyWith(
+                      fontSize: 13.5,
+                      color: ColorApp.black.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 4.0),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 9.0,
+                        height: 9.0,
+                        decoration:
+                            BoxDecoration(color: c, shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 7.0),
+                      Text(
+                        controller.accuracyLabel,
+                        style: primary700.copyWith(fontSize: 14.0, color: c),
+                      ),
+                      if (level == CompassAccuracy.low ||
+                          level == CompassAccuracy.medium) ...[
+                        const SizedBox(width: 6.0),
+                        Icon(
+                          Icons.compass_calibration_rounded,
+                          size: 16.0,
+                          color: c,
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
-              ],
+              ),
             ),
           ),
         ],
@@ -518,22 +532,31 @@ class _QiblaScreenState extends State<QiblaScreen>
 
   Widget _infoRow(IconData icon, String label, String value) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 20.0, color: ColorApp.primary),
         const SizedBox(width: 12.0),
-        Text(
-          label,
-          style: primary400.copyWith(
-            fontSize: 13.5,
-            color: ColorApp.black.withValues(alpha: 0.6),
-          ),
-        ),
-        const Spacer(),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: primary700.copyWith(fontSize: 14.0, color: ColorApp.black),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: primary400.copyWith(
+                  fontSize: 13.5,
+                  color: ColorApp.black.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 4.0),
+              Text(
+                value,
+                textAlign: TextAlign.left,
+                style: primary700.copyWith(
+                  fontSize: 14.0,
+                  color: ColorApp.black,
+                ),
+              ),
+            ],
           ),
         ),
       ],

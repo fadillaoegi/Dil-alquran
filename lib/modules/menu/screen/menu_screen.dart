@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:dilalquran/routes/route.dart';
+import 'package:dilalquran/services/update_service.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
+import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:dilalquran/widgets/card_menu_widget.dart';
+import 'package:dilalquran/widgets/update_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +22,9 @@ class _MenuScreenState extends State<MenuScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   String? _shalatLocationLabel;
+  bool _isCheckingUpdate = false;
+  int _debugTapCount = 0;
+  Timer? _debugTapResetTimer;
 
   @override
   void initState() {
@@ -30,6 +38,7 @@ class _MenuScreenState extends State<MenuScreen>
 
   @override
   void dispose() {
+    _debugTapResetTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -50,6 +59,56 @@ class _MenuScreenState extends State<MenuScreen>
 
     if (!mounted) return;
     setState(() => _shalatLocationLabel = label);
+  }
+
+  Future<void> _checkForUpdateFromMenu() async {
+    if (_isCheckingUpdate) return;
+    setState(() => _isCheckingUpdate = true);
+
+    final result = await UpdateService.checkUpdateStatus();
+
+    if (!mounted) return;
+    setState(() => _isCheckingUpdate = false);
+
+    if (result.isUpdateAvailable) {
+      await showUpdateDialog(context);
+      return;
+    }
+
+    showAppSnackbar(
+      result.title,
+      result.message,
+      isError: result.isError,
+    );
+  }
+
+  void _handleHiddenDebugTrigger() {
+    _debugTapResetTimer?.cancel();
+    _debugTapCount++;
+    _debugTapResetTimer = Timer(const Duration(seconds: 2), () {
+      _debugTapCount = 0;
+    });
+
+    if (_debugTapCount >= 7) {
+      _debugTapResetTimer?.cancel();
+      _debugTapCount = 0;
+      showAppSnackbar(
+        'Mode Diagnostik',
+        'Membuka halaman startup diagnostics.',
+        isError: false,
+      );
+      Get.toNamed(RouteScreen.startupDebug);
+      return;
+    }
+
+    if (_debugTapCount >= 4) {
+      final remaining = 7 - _debugTapCount;
+      showAppSnackbar(
+        'Trigger Tersembunyi',
+        '$remaining ketukan lagi untuk membuka diagnostics.',
+        isError: false,
+      );
+    }
   }
 
   Animation<double> _interval(double begin, double end) {
@@ -196,6 +255,25 @@ class _MenuScreenState extends State<MenuScreen>
                 },
               ),
             ),
+            _FadeSlideIn(
+              animation: _interval(0.82, 1.0),
+              child: CardMenu(
+                title: "Check Update",
+                subtitle: _isCheckingUpdate
+                    ? "Sedang memeriksa pembaruan..."
+                    : "Periksa versi terbaru di Google Play",
+                infoLabel: _isCheckingUpdate
+                    ? "Memeriksa..."
+                    : "Cek pembaruan aplikasi",
+                icon: Icons.system_update_alt_rounded,
+                gradientColors: const [
+                  Color(0xff124631),
+                  ColorApp.primary,
+                  Color(0xff78c48f),
+                ],
+                onTap: _checkForUpdateFromMenu,
+              ),
+            ),
             const SizedBox(height: 28.0),
           ],
         ),
@@ -260,9 +338,13 @@ class _MenuScreenState extends State<MenuScreen>
                   ],
                 ),
                 const SizedBox(height: 14.0),
-                Text(
-                  "Assalamualaikum",
-                  style: white700.copyWith(fontSize: 26.0),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _handleHiddenDebugTrigger,
+                  child: Text(
+                    "Assalamualaikum",
+                    style: white700.copyWith(fontSize: 26.0),
+                  ),
                 ),
                 const SizedBox(height: 6.0),
                 Row(

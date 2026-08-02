@@ -44,8 +44,14 @@ class NotificationService {
 
   Future<void> init() async {
     tz.initializeTimeZones();
-    final TimezoneInfo timeZoneInfo = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneInfo.identifier));
+    try {
+      final TimezoneInfo timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneInfo.identifier));
+    } catch (_) {
+      // Bila plugin timezone gagal pada perangkat tertentu, jangan blokir
+      // startup aplikasi. Scheduler berikutnya akan memakai zona default
+      // sampai layanan berhasil diinisialisasi ulang.
+    }
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -71,7 +77,6 @@ class NotificationService {
     );
 
     await _ensureAndroidChannels();
-    await restoreSchedulesFromStorage();
   }
 
   // Channel Android mengunci suaranya saat pertama dibuat. Jika channel adzan
@@ -138,13 +143,19 @@ class NotificationService {
   // semua perangkat, termasuk MIUI/HyperOS yang membatasi suara panjang).
   static const String adzanChannelId = 'prayer_channel_adzan_v4';
 
-  Future<void> requestPermissions() async {
+  Future<bool> requestPermissions() async {
+    var notificationsEnabled = true;
+
     // Android 13+: izin menampilkan notifikasi + izin exact alarm (Android 12+)
     final androidImplementation =
         flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
-    await androidImplementation?.requestNotificationsPermission();
-    await androidImplementation?.requestExactAlarmsPermission();
+    if (androidImplementation != null) {
+      await androidImplementation.requestNotificationsPermission();
+      await androidImplementation.requestExactAlarmsPermission();
+      notificationsEnabled =
+          await androidImplementation.areNotificationsEnabled() ?? true;
+    }
 
     // iOS: izin alert, badge, dan suara
     await flutterLocalNotificationsPlugin
@@ -155,6 +166,28 @@ class NotificationService {
           badge: true,
           sound: true,
         );
+
+    return notificationsEnabled;
+  }
+
+  Future<bool> areNotificationsEnabled() async {
+    final androidImplementation =
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    return await androidImplementation?.areNotificationsEnabled() ?? true;
+  }
+
+  Future<bool> canScheduleExactNotifications() async {
+    final androidImplementation =
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    return await androidImplementation?.canScheduleExactNotifications() ?? true;
+  }
+
+  Future<bool> hasPendingNotification(int id) async {
+    final requests = await flutterLocalNotificationsPlugin
+        .pendingNotificationRequests();
+    return requests.any((request) => request.id == id);
   }
 
   // Detail notifikasi shalat sesuai jenis suara: 'adzan' (bundled),

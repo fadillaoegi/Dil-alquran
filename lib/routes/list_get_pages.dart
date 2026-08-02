@@ -2,6 +2,7 @@ import 'package:dilalquran/modules/detail_surah/detail_controller.dart';
 import 'package:dilalquran/modules/detail_surah/detail_screen.dart';
 import 'package:dilalquran/modules/detail_doa/controller/detail_doa_controller.dart';
 import 'package:dilalquran/modules/detail_doa/screen/detail_doa_screen.dart';
+import 'package:dilalquran/modules/debug/screen/startup_debug_screen.dart';
 import 'package:dilalquran/modules/doa/controller/doa_controller.dart';
 import 'package:dilalquran/modules/doa/screen/doa_screen.dart';
 import 'package:dilalquran/modules/dzikir/controller/dzikir_controller.dart';
@@ -115,5 +116,9 @@ List<GetPage<dynamic>>? getPages = [
     binding: BindingsBuilder(() {
       Get.lazyPut<QiblaController>(() => QiblaController());
     }),
+  ),
+  GetPage(
+    name: RouteScreen.startupDebug,
+    page: () => const StartupDebugScreen(),
   ),
 ];
