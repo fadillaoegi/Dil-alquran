@@ -1,8 +1,7 @@
 import 'package:flutter/services.dart';
 
-// Jembatan ke native (Android) untuk membebaskan aplikasi dari optimasi
-// baterai, agar alarm/notifikasi shalat tetap berjalan saat aplikasi ditutup.
-// Di platform selain Android, metode ini no-op dan dianggap sudah "aman".
+// Jembatan ke native (Android) untuk pengaturan sistem yang memengaruhi alarm
+// dan notifikasi aplikasi.
 class PowerManager {
   static const MethodChannel _channel = MethodChannel('dilalquran/power');
 
@@ -25,6 +24,42 @@ class PowerManager {
     try {
       final result = await _channel
           .invokeMethod<bool>('requestIgnoreBatteryOptimizations');
+      return result ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  static Future<bool> openNotificationSettings() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('openNotificationSettings');
+      return result ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  static Future<bool> openExactAlarmSettings() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('openExactAlarmSettings');
+      return result ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  static Future<bool> openNotificationChannelSettings(String channelId) async {
+    try {
+      final result = await _channel.invokeMethod<bool>(
+        'openNotificationChannelSettings',
+        {'channelId': channelId},
+      );
       return result ?? false;
     } on PlatformException {
       return false;

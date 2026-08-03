@@ -95,6 +95,8 @@ class NotificationService {
     await android.deleteNotificationChannel('prayer_channel_adzan_test');
     await android.deleteNotificationChannel('prayer_channel_adzan_v2');
     await android.deleteNotificationChannel('prayer_channel_adzan_v3');
+    await android.deleteNotificationChannel('prayer_channel_adzan_v4');
+    await android.deleteNotificationChannel('prayer_channel_adzan_v5');
     await android.deleteNotificationChannel('prayer_channel_alarm');
     await android.deleteNotificationChannel('prayer_channel_device');
     await android.deleteNotificationChannel('prayer_channel_silent');
@@ -105,7 +107,7 @@ class NotificationService {
         'Notifikasi Shalat Adzan',
         description: 'Pengingat Waktu Shalat dengan suara Adzan',
         importance: Importance.max,
-        sound: RawResourceAndroidNotificationSound('adzan'),
+        sound: RawResourceAndroidNotificationSound('adzan_short'),
         playSound: true,
       ),
     );
@@ -139,9 +141,9 @@ class NotificationService {
     );
   }
 
-  // ID channel adzan (v4: adzan ~40 detik agar andal muncul & berbunyi di
-  // semua perangkat, termasuk MIUI/HyperOS yang membatasi suara panjang).
-  static const String adzanChannelId = 'prayer_channel_adzan_v4';
+  // ID channel adzan (v6: paksa channel baru saat upgrade agar setelan suara
+  // lama yang ter-cache/silent di perangkat user tidak terbawa terus).
+  static const String adzanChannelId = 'prayer_channel_adzan_v6';
 
   Future<bool> requestPermissions() async {
     var notificationsEnabled = true;
@@ -252,7 +254,7 @@ class NotificationService {
         channelDescription: 'Pengingat Waktu Shalat dengan suara Adzan',
         importance: Importance.max,
         priority: Priority.high,
-        sound: RawResourceAndroidNotificationSound('adzan'),
+        sound: RawResourceAndroidNotificationSound('adzan_short'),
         playSound: true,
       );
       ios = const DarwinNotificationDetails(
@@ -438,22 +440,29 @@ class NotificationService {
     if (!scheduled.isAfter(tz.TZDateTime.now(tz.local))) return;
 
     final details = _prayerDetails(soundType, customUri: customSoundUri);
+    await _zonedScheduleResilient(id, title, body, scheduled, details);
+  }
 
-    try {
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        id,
-        title,
-        body,
-        scheduled,
-        details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-      );
-    } catch (_) {
-      // Fallback: bila exact alarm tidak diizinkan OS/perangkat, jadwalkan
-      // mode inexact agar notifikasi tetap muncul (mungkin telat beberapa
-      // menit) — lebih baik daripada tidak muncul sama sekali.
+  // Menjadwalkan notifikasi dengan tingkat keandalan bertingkat:
+  // 1) alarmClock  -> AlarmManager.setAlarmClock(): prioritas tertinggi, tetap
+  //    berbunyi TEPAT WAKTU walau Doze/idle, tidak di-throttle OEM. Paling andal
+  //    untuk adzan/pengingat kritis-waktu.
+  // 2) exactAllowWhileIdle -> exact biasa (bila alarmClock tak tersedia).
+  // 3) inexactAllowWhileIdle -> fallback terakhir agar tetap muncul (bisa telat).
+  Future<void> _zonedScheduleResilient(
+    int id,
+    String title,
+    String body,
+    tz.TZDateTime scheduled,
+    NotificationDetails details, {
+    DateTimeComponents? matchDateTimeComponents,
+  }) async {
+    const modes = [
+      AndroidScheduleMode.alarmClock,
+      AndroidScheduleMode.exactAllowWhileIdle,
+      AndroidScheduleMode.inexactAllowWhileIdle,
+    ];
+    for (final mode in modes) {
       try {
         await flutterLocalNotificationsPlugin.zonedSchedule(
           id,
@@ -461,12 +470,14 @@ class NotificationService {
           body,
           scheduled,
           details,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: mode,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: matchDateTimeComponents,
         );
+        return; // berhasil pada mode ini
       } catch (_) {
-        // Abaikan; jadwal ini gagal dibuat.
+        // coba mode berikutnya yang lebih longgar
       }
     }
   }
@@ -566,30 +577,12 @@ class NotificationService {
     final scheduled =
         tz.TZDateTime.now(tz.local).add(Duration(minutes: minutes));
     final details = _prayerDetails(soundType, customUri: customSoundUri);
-    try {
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        998,
-        'Tes Notifikasi Terjadwal',
-        'Notifikasi terjadwal berfungsi dengan baik. Pengingat shalat akan muncul tepat waktu.',
-        scheduled,
-        details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-      );
-    } catch (_) {
-      try {
-        await flutterLocalNotificationsPlugin.zonedSchedule(
-          998,
-          'Tes Notifikasi Terjadwal',
-          'Notifikasi terjadwal berfungsi dengan baik (mode inexact).',
-          scheduled,
-          details,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-        );
-      } catch (_) {}
-    }
+    await _zonedScheduleResilient(
+      998,
+      'Tes Notifikasi Terjadwal',
+      'Notifikasi terjadwal berfungsi dengan baik. Pengingat shalat akan muncul tepat waktu.',
+      scheduled,
+      details,
+    );
   }
 }

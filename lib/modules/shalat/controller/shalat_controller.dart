@@ -39,6 +39,7 @@ class ShalatController extends GetxController {
   static const List<String> notificationModes = [
     notificationModeAdzan,
     notificationModeDevice,
+    notificationModeCustom,
     notificationModeSilent,
     notificationModeOff,
   ];
@@ -65,6 +66,8 @@ class ShalatController extends GetxController {
   // Status apakah aplikasi sudah dikecualikan dari optimasi baterai (Android).
   // Bila false, alarm/notifikasi shalat berisiko dimatikan OS saat app ditutup.
   final RxBool isIgnoringBatteryOptimization = true.obs;
+  final RxBool isNotificationPermissionGranted = true.obs;
+  final RxBool isExactAlarmPermissionGranted = true.obs;
 
   // Pemutar untuk pratinjau suara notifikasi di dialog (bisa play/pause).
   AudioPlayer? _previewPlayer;
@@ -79,9 +82,12 @@ class ShalatController extends GetxController {
     _loadPreferences();
     fetchProvinsi();
     refreshBatteryOptimizationStatus();
+    refreshNotificationSupportStatus();
     // Reset tombol ke ikon play saat pratinjau selesai.
-    _previewPlayerInstance.onPlayerComplete
-        .listen((_) => previewingMode.value = "");
+    _previewPlayerInstance.onPlayerComplete.listen((_) {
+      previewingMode.value = "";
+      currentlyPlayingPreview.value = '';
+    });
   }
 
   @override
@@ -135,6 +141,7 @@ class ShalatController extends GetxController {
 
   Future<void> stopPreview() async {
     previewingMode.value = "";
+    currentlyPlayingPreview.value = '';
     await _previewPlayerInstance.stop();
   }
 
@@ -151,6 +158,33 @@ class ShalatController extends GetxController {
     // Beri jeda agar status ter-update setelah user menutup dialog.
     await Future.delayed(const Duration(milliseconds: 400));
     await refreshBatteryOptimizationStatus();
+  }
+
+  Future<void> refreshNotificationSupportStatus() async {
+    isNotificationPermissionGranted.value =
+        await _notificationService.areNotificationsEnabled();
+    isExactAlarmPermissionGranted.value =
+        await _notificationService.canScheduleExactNotifications();
+  }
+
+  Future<void> openNotificationSettings() async {
+    await PowerManager.openNotificationSettings();
+    await Future.delayed(const Duration(milliseconds: 500));
+    await refreshNotificationSupportStatus();
+  }
+
+  Future<void> openExactAlarmSettings() async {
+    await PowerManager.openExactAlarmSettings();
+    await Future.delayed(const Duration(milliseconds: 500));
+    await refreshNotificationSupportStatus();
+  }
+
+  Future<void> openAdzanChannelSettings() async {
+    await PowerManager.openNotificationChannelSettings(
+      NotificationService.adzanChannelId,
+    );
+    await Future.delayed(const Duration(milliseconds: 500));
+    await refreshNotificationSupportStatus();
   }
 
   Future<void> _loadPreferences() async {
@@ -758,46 +792,55 @@ class ShalatController extends GetxController {
 
   Future<void> previewPrayerNotificationMode(String prayer, String mode) async {
     if (currentlyPlayingPreview.value == mode) {
-      await _notificationService.cancelTestNotification();
+      await _previewPlayerInstance.stop();
       currentlyPlayingPreview.value = '';
       return;
     }
 
-    // Pastikan izin notifikasi (Android 13+) sudah diberikan; tanpa ini
-    // preview tidak akan muncul/berbunyi.
-    final notificationsEnabled =
-        await _notificationService.requestPermissions();
-    if (!notificationsEnabled) {
-      _snack(
-        "Notifikasi Belum Diizinkan",
-        "Preview tidak bisa ditampilkan karena izin notifikasi aplikasi masih diblokir.",
-      );
-      return;
-    }
     var previewMode = mode;
     if (mode == notificationModeCustom) {
       final hasCustomSound = await ensureCustomSoundSelected();
       if (!hasCustomSound) return;
       previewMode = notificationModeCustom;
     }
-    if (previewMode == notificationModeOff) return;
+    if (previewMode == notificationModeOff ||
+        previewMode == notificationModeSilent) {
+      currentlyPlayingPreview.value = '';
+      return;
+    }
 
+    await _previewPlayerInstance.stop();
     currentlyPlayingPreview.value = mode;
 
-    await _notificationService.testNotification(
-      soundType: previewMode,
-      customSoundUri: customSoundUri.value,
-      title: "Tes Notifikasi $prayer",
-      body: "Preview suara notifikasi untuk waktu shalat $prayer.",
-    );
-
-    // Otomatis reset icon pause kembali ke play setelah 5 detik
-    // (karena notifikasi lokal tidak memiliki callback saat suara selesai)
-    Future.delayed(const Duration(seconds: 5), () {
-      if (currentlyPlayingPreview.value == mode) {
-        currentlyPlayingPreview.value = '';
+    try {
+      switch (previewMode) {
+        case notificationModeAdzan:
+          await _previewPlayerInstance.play(
+            AssetSource('notification/adzan.mp3'),
+          );
+          break;
+        case notificationModeDevice:
+          await _previewPlayerInstance.play(
+            UrlSource('content://settings/system/notification_sound'),
+          );
+          break;
+        case notificationModeCustom:
+          if (customSoundUri.value.isEmpty) {
+            currentlyPlayingPreview.value = '';
+            return;
+          }
+          await _previewPlayerInstance.play(
+            UrlSource(customSoundUri.value),
+          );
+          break;
       }
-    });
+    } catch (_) {
+      currentlyPlayingPreview.value = '';
+      _snack(
+        "Preview Gagal",
+        "Perangkat tidak dapat memutar suara preview untuk mode ini.",
+      );
+    }
   }
 
   // Pilih semua / kosongkan semua waktu sholat sekaligus.

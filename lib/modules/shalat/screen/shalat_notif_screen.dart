@@ -26,6 +26,8 @@ class ShalatNotifScreen extends GetView<ShalatController> {
         padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 28.0),
         children: [
           _buildMasterToggle(context),
+          const SizedBox(height: 20.0),
+          _buildNotificationSupportCard(),
           Obx(() {
             if (!controller.isNotificationEnabled.value) {
               return _buildDisabledInfo();
@@ -33,7 +35,6 @@ class ShalatNotifScreen extends GetView<ShalatController> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20.0),
                 _buildBackgroundCard(context),
                 const SizedBox(height: 20.0),
                 Row(
@@ -129,6 +130,181 @@ class ShalatNotifScreen extends GetView<ShalatController> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNotificationSupportCard() {
+    return Obx(() {
+      final notifOk = controller.isNotificationPermissionGranted.value;
+      final exactOk = controller.isExactAlarmPermissionGranted.value;
+      final fullyReady = notifOk && exactOk;
+      final accent = fullyReady ? ColorApp.primary : const Color(0xffd98a1f);
+
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: fullyReady
+              ? ColorApp.primary.withValues(alpha: 0.06)
+              : const Color(0xfffdf3e2),
+          borderRadius: BorderRadius.circular(18.0),
+          border: Border.all(color: accent.withValues(alpha: 0.35), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.18),
+              offset: const Offset(0, 4),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10.0),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    fullyReady
+                        ? Icons.notifications_active_rounded
+                        : Icons.notification_important_rounded,
+                    color: accent,
+                    size: 22.0,
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Cek Dukungan Notifikasi",
+                        style: primary700.copyWith(
+                          fontSize: 14.5,
+                          color: ColorApp.black,
+                        ),
+                      ),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        fullyReady
+                            ? "Izin notifikasi dan alarm presisi sudah siap."
+                            : "Jika tes 1 menit atau adzan tidak bunyi di rilis, cek pengaturan sistem ini dulu.",
+                        style: black400.copyWith(
+                          fontSize: 12.0,
+                          color: ColorApp.black.withValues(alpha: 0.6),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14.0),
+            _supportStatusRow(
+              label: "Izin notifikasi",
+              ok: notifOk,
+              actionLabel: "Buka Izin",
+              onTap: controller.openNotificationSettings,
+            ),
+            const SizedBox(height: 10.0),
+            _supportStatusRow(
+              label: "Alarm presisi 1 menit",
+              ok: exactOk,
+              actionLabel: "Buka Alarm",
+              onTap: controller.openExactAlarmSettings,
+            ),
+            const SizedBox(height: 10.0),
+            _supportActionRow(
+              label: "Suara channel adzan",
+              subtitle:
+                  "Buka channel agar bisa cek sound, importance, dan apakah user sempat mengubahnya ke silent.",
+              actionLabel: "Buka Channel Adzan",
+              onTap: controller.openAdzanChannelSettings,
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _supportStatusRow({
+    required String label,
+    required bool ok,
+    required String actionLabel,
+    required Future<void> Function() onTap,
+  }) {
+    final color = ok ? ColorApp.primary : const Color(0xffd98a1f);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: primary700.copyWith(fontSize: 13.0)),
+              const SizedBox(height: 3.0),
+              Row(
+                children: [
+                  Container(
+                    width: 8.0,
+                    height: 8.0,
+                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6.0),
+                  Text(
+                    ok ? "Siap" : "Perlu dicek",
+                    style: primary600.copyWith(fontSize: 12.5, color: color),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        TextButton(
+          onPressed: () async => onTap(),
+          child: Text(actionLabel, style: primary700.copyWith(fontSize: 12.5)),
+        ),
+      ],
+    );
+  }
+
+  Widget _supportActionRow({
+    required String label,
+    required String subtitle,
+    required String actionLabel,
+    required Future<void> Function() onTap,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: primary700.copyWith(fontSize: 13.0)),
+              const SizedBox(height: 3.0),
+              Text(
+                subtitle,
+                style: black400.copyWith(
+                  fontSize: 12.0,
+                  color: ColorApp.black.withValues(alpha: 0.6),
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10.0),
+        TextButton(
+          onPressed: () async => onTap(),
+          child: Text(actionLabel, style: primary700.copyWith(fontSize: 12.5)),
+        ),
+      ],
     );
   }
 

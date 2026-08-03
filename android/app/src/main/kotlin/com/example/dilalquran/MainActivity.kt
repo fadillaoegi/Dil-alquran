@@ -117,6 +117,23 @@ class MainActivity : AudioServiceActivity() {
                         }
                     }
 
+                    "openNotificationSettings" -> {
+                        result.success(openNotificationSettings())
+                    }
+
+                    "openExactAlarmSettings" -> {
+                        result.success(openExactAlarmSettings())
+                    }
+
+                    "openNotificationChannelSettings" -> {
+                        val channelId = call.argument<String>("channelId")
+                        if (channelId.isNullOrBlank()) {
+                            result.success(false)
+                        } else {
+                            result.success(openNotificationChannelSettings(channelId))
+                        }
+                    }
+
                     else -> result.notImplemented()
                 }
             }
@@ -126,6 +143,65 @@ class MainActivity : AudioServiceActivity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
         val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
         return pm?.isIgnoringBatteryOptimizations(packageName) ?: true
+    }
+
+    private fun openNotificationSettings(): Boolean {
+        return try {
+            val intent = Intent().apply {
+                action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+            true
+        } catch (e: Exception) {
+            try {
+                startActivity(
+                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.parse("package:$packageName")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                )
+                true
+            } catch (e2: Exception) {
+                false
+            }
+        }
+    }
+
+    private fun openExactAlarmSettings(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                    data = Uri.parse("package:$packageName")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+                true
+            } catch (e: Exception) {
+                openNotificationSettings()
+            }
+        } else {
+            openNotificationSettings()
+        }
+    }
+
+    private fun openNotificationChannelSettings(channelId: String): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                val intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                    putExtra(Settings.EXTRA_CHANNEL_ID, channelId)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+                true
+            } catch (e: Exception) {
+                openNotificationSettings()
+            }
+        } else {
+            openNotificationSettings()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
