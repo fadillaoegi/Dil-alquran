@@ -14,5 +14,6 @@ class RouteScreen {
   static const String detailDoa = "$root/detailDoa";
   static const String detailSurah = "$root/detailSurah";
   static const String qibla = "$root/qibla";
+  static const String tuntunan = "$root/tuntunan";
   static const String startupDebug = "$root/startupDebug";
 }

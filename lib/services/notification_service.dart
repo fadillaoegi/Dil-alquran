@@ -70,7 +70,7 @@ class NotificationService {
     );
 
     await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
         // Handle notification tap
       },
@@ -91,15 +91,15 @@ class NotificationService {
 
     // Bersihkan channel adzan lama yang mungkin ter-cache dengan suara salah
     // atau suara adzan versi terpotong (30 detik).
-    await android.deleteNotificationChannel('prayer_channel_adzan');
-    await android.deleteNotificationChannel('prayer_channel_adzan_test');
-    await android.deleteNotificationChannel('prayer_channel_adzan_v2');
-    await android.deleteNotificationChannel('prayer_channel_adzan_v3');
-    await android.deleteNotificationChannel('prayer_channel_adzan_v4');
-    await android.deleteNotificationChannel('prayer_channel_adzan_v5');
-    await android.deleteNotificationChannel('prayer_channel_alarm');
-    await android.deleteNotificationChannel('prayer_channel_device');
-    await android.deleteNotificationChannel('prayer_channel_silent');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_adzan');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_adzan_test');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_adzan_v2');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_adzan_v3');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_adzan_v4');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_adzan_v5');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_alarm');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_device');
+    await android.deleteNotificationChannel(channelId: 'prayer_channel_silent');
 
     await android.createNotificationChannel(
       const AndroidNotificationChannel(
@@ -288,7 +288,7 @@ class NotificationService {
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.deleteNotificationChannel('prayer_channel_custom');
+        ?.deleteNotificationChannel(channelId: 'prayer_channel_custom');
   }
 
   Future<void> cachePrayerSchedule(List<ShalatModel> schedules) async {
@@ -465,14 +465,12 @@ class NotificationService {
     for (final mode in modes) {
       try {
         await flutterLocalNotificationsPlugin.zonedSchedule(
-          id,
-          title,
-          body,
-          scheduled,
-          details,
+          id: id,
+          title: title,
+          body: body,
+          scheduledDate: scheduled,
+          notificationDetails: details,
           androidScheduleMode: mode,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: matchDateTimeComponents,
         );
         return; // berhasil pada mode ini
@@ -487,7 +485,7 @@ class NotificationService {
   }
 
   Future<void> cancel(int id) async {
-    await flutterLocalNotificationsPlugin.cancel(id);
+    await flutterLocalNotificationsPlugin.cancel(id: id);
   }
 
   // Pengingat harian berulang pada jam tertentu (mis. muraja'ah hafalan).
@@ -520,31 +518,16 @@ class NotificationService {
       presentSound: true,
     );
 
-    try {
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        id,
-        title,
-        body,
-        scheduled,
-        const NotificationDetails(android: androidDetails, iOS: iOSDetails),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-    } catch (_) {
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        id,
-        title,
-        body,
-        scheduled,
-        const NotificationDetails(android: androidDetails, iOS: iOSDetails),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-    }
+    // Pakai penjadwalan berjenjang yang sama (alarmClock lebih dulu) agar
+    // pengingat harian juga tahan Doze/throttling OEM.
+    await _zonedScheduleResilient(
+      id,
+      title,
+      body,
+      scheduled,
+      const NotificationDetails(android: androidDetails, iOS: iOSDetails),
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
   }
 
   Future<void> testNotification({
@@ -554,15 +537,15 @@ class NotificationService {
     String body = 'Notifikasi berfungsi dengan baik. Suara dan tampilan notifikasi sudah aktif.',
   }) async {
     await flutterLocalNotificationsPlugin.show(
-      999,
-      title,
-      body,
-      _prayerDetails(soundType, customUri: customSoundUri),
+      id: 999,
+      title: title,
+      body: body,
+      notificationDetails: _prayerDetails(soundType, customUri: customSoundUri),
     );
   }
 
   Future<void> cancelTestNotification() async {
-    await flutterLocalNotificationsPlugin.cancel(999);
+    await flutterLocalNotificationsPlugin.cancel(id: 999);
   }
 
   // Diagnosa: jadwalkan notifikasi tes beberapa menit dari sekarang untuk

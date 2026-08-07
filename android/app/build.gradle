@@ -79,6 +79,13 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+
+            // Flutter mengaktifkan R8 + resource shrinking pada build release.
+            // Tanpa aturan di bawah, R8 merusak model Gson milik
+            // flutter_local_notifications sehingga notifikasi TERJADWAL gagal
+            // senyap di rilis (lihat proguard-rules.pro).
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
         }
     }
 }
@@ -88,5 +95,5 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }

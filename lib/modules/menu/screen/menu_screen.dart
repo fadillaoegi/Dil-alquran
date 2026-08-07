@@ -256,7 +256,24 @@ class _MenuScreenState extends State<MenuScreen>
               ),
             ),
             _FadeSlideIn(
-              animation: _interval(0.82, 1.0),
+              animation: _interval(0.80, 1.0),
+              child: CardMenu(
+                title: "Tuntunan Sholat",
+                subtitle: "Tata cara wudhu sampai salam",
+                infoLabel: "Panduan bergambar & bacaannya",
+                icon: Icons.self_improvement_rounded,
+                gradientColors: const [
+                  Color(0xff0d4e34),
+                  ColorApp.primary,
+                  Color(0xff5fc08a),
+                ],
+                onTap: () {
+                  Get.toNamed(RouteScreen.tuntunan);
+                },
+              ),
+            ),
+            _FadeSlideIn(
+              animation: _interval(0.84, 1.0),
               child: CardMenu(
                 title: "Check Update",
                 subtitle: _isCheckingUpdate

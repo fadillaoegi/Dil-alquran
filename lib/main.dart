@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:dilalquran/modules/app_screen.dart';
 import 'package:dilalquran/services/connectivity_service.dart';
 import 'package:dilalquran/services/notification_service.dart';

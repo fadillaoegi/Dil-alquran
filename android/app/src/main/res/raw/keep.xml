@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Suara adzan hanya dirujuk lewat NAMA dari kode Dart
+  (RawResourceAndroidNotificationSound('adzan_short')), sehingga resource
+  shrinker pada build release menganggapnya tidak terpakai lalu menghapusnya.
+  Akibatnya channel notifikasi menunjuk suara yang tidak ada dan notifikasi
+  gagal muncul/berbunyi di rilis Play Store. Baris ini menguncinya agar ikut.
+-->
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/adzan,@raw/adzan_short" />
