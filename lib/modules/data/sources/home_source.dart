@@ -1,11 +1,14 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
+
 import 'package:dilalquran/config/api_config.dart';
 import 'package:dilalquran/config/request_config.dart';
 import 'package:dilalquran/modules/data/models/juz_model.dart';
 import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
 import 'package:dilalquran/modules/data/models/surah_model.dart';
 import 'package:dilalquran/services/offline_store.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class HomeSource {
 
@@ -21,8 +24,32 @@ class HomeSource {
     } catch (error) {
       print("Catch from Source fetchSurah: $error");
     }
-    // Fallback: daftar surah yang tersimpan offline.
-    return OfflineStore().readSurahIndex();
+
+    // Fallback 1: daftar surah yang tersimpan offline (hasil online sebelumnya).
+    final cached = await OfflineStore().readSurahIndex();
+    if (cached.isNotEmpty) return cached;
+
+    // Fallback 2: daftar 114 surah bawaan aplikasi (aset lokal) — selalu
+    // tersedia walau belum pernah online. Ini menjaga daftar surah tetap
+    // tampil tanpa internet.
+    return _loadBundledSurahIndex();
+  }
+
+  // Muat daftar surah dari aset JSON yang dibundel dalam aplikasi.
+  static Future<List<Surah>> _loadBundledSurahIndex() async {
+    try {
+      final raw = await rootBundle.loadString('assets/json/surah_index.json');
+      final List data = json.decode(raw) as List;
+      final list = data
+          .map((e) => Surah.fromJson(e as Map<String, dynamic>))
+          .toList();
+      // Simpan ke cache agar pemakaian berikutnya konsisten.
+      await OfflineStore().saveSurahIndex(list);
+      return list;
+    } catch (error) {
+      print("Catch from Source _loadBundledSurahIndex: $error");
+      return <Surah>[];
+    }
   }
 
   static Future<SurahDetail> fetchDetailSurah(String surahNumber) async {

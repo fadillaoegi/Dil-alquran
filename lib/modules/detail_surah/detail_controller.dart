@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DetailSurahController extends GetxController {
   static const _prefQariKey = 'dilalquran_selected_qari';
   static const _prefLastReadKey = 'dilalquran_last_read_ayat';
+  static const _prefBookModeKey = 'dilalquran_book_mode';
 
   final _surahDetail = SurahDetail().obs;
   SurahDetail get surahDetail => _surahDetail.value;
@@ -44,6 +45,16 @@ class DetailSurahController extends GetxController {
 
   final _lastRead = Rxn<LastReadAyat>();
   LastReadAyat? get lastRead => _lastRead.value;
+
+  // Mode tampilan: false = mode gulir (default), true = mode buku (mushaf).
+  final _isBookMode = false.obs;
+  bool get isBookMode => _isBookMode.value;
+  RxBool get isBookModeRx => _isBookMode;
+
+  Future<void> toggleBookMode() async {
+    _isBookMode.value = !_isBookMode.value;
+    await _prefs?.setBool(_prefBookModeKey, _isBookMode.value);
+  }
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   final AudioController audioCtrl = Get.find<AudioController>();
@@ -340,6 +351,8 @@ class DetailSurahController extends GetxController {
     if (savedQari != null && savedQari.isNotEmpty) {
       _selectedQari.value = savedQari;
     }
+
+    _isBookMode.value = _prefs?.getBool(_prefBookModeKey) ?? false;
 
     final savedLastRead = _prefs?.getString(_prefLastReadKey);
     if (savedLastRead != null && savedLastRead.isNotEmpty) {

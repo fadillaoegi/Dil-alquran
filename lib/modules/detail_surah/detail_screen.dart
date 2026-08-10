@@ -1,5 +1,6 @@
 import 'package:dilalquran/modules/data/models/juz_model.dart';
 import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
+import 'package:dilalquran/modules/detail_surah/book_mode_view.dart';
 import 'package:dilalquran/modules/detail_surah/detail_controller.dart';
 import 'package:dilalquran/modules/home/controller/home_controller.dart';
 import 'package:dilalquran/themes/colors.dart';
@@ -75,6 +76,20 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
           );
         }),
         iconTheme: const IconThemeData(color: ColorApp.white),
+        actions: [
+          // Pengalih tampilan: Mode Gulir (default) <-> Mode Buku (mushaf).
+          Obx(() {
+            final book = controller.isBookMode;
+            return IconButton(
+              tooltip: book ? 'Mode Gulir' : 'Mode Buku',
+              onPressed: controller.toggleBookMode,
+              icon: Icon(
+                book ? Icons.view_agenda_rounded : Icons.menu_book_rounded,
+                color: ColorApp.white,
+              ),
+            );
+          }),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading) {
@@ -100,6 +115,26 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
         final verseItems = isJuz
             ? _buildJuzVerseItems(controller.juzDetail)
             : _buildSurahVerseItems(controller.surahDetail);
+
+        // Mode Buku: tampilan mushaf yang dibalik per lembar. Dicabang lebih
+        // dulu karena tidak memakai daftar bergulir (dan controller scroll-nya
+        // tidak terpasang di mode ini).
+        if (controller.isBookMode && verseItems.isNotEmpty) {
+          return BookModeView(
+            title: isJuz
+                ? 'Juz ${controller.number}'
+                : (controller.surahDetail.namaLatin ?? 'Surah'),
+            verses: verseItems
+                .map(
+                  (item) => MushafVerse(
+                    ayatNumber: item.ayatNumber,
+                    arabText: item.arabText,
+                    surahNameLatin: item.surahNameLatin,
+                  ),
+                )
+                .toList(),
+          );
+        }
 
         _rebuildVerseIndexMap(verseItems);
         _scheduleInitialScroll();
