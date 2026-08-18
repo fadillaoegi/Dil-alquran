@@ -2,6 +2,7 @@ import 'package:dilalquran/modules/data/models/juz_model.dart';
 import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
 import 'package:dilalquran/modules/detail_surah/book_mode_view.dart';
 import 'package:dilalquran/modules/detail_surah/detail_controller.dart';
+import 'package:dilalquran/modules/detail_surah/tajweed.dart';
 import 'package:dilalquran/modules/home/controller/home_controller.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
@@ -77,6 +78,21 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
         }),
         iconTheme: const IconThemeData(color: ColorApp.white),
         actions: [
+          Obx(() {
+            final enabled = controller.isTajweedEnabled;
+            return IconButton(
+              tooltip: enabled
+                  ? 'Tajwid berwarna aktif'
+                  : 'Tajwid berwarna nonaktif',
+              onPressed: _showTajweedSheet,
+              icon: Icon(
+                enabled ? Icons.palette_rounded : Icons.palette_outlined,
+                color: enabled
+                    ? const Color(0xFFFFD166)
+                    : ColorApp.white.withValues(alpha: 0.75),
+              ),
+            );
+          }),
           // Pengalih tampilan: Mode Gulir (default) <-> Mode Buku (mushaf).
           Obx(() {
             final book = controller.isBookMode;
@@ -121,6 +137,9 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
         // tidak terpasang di mode ini).
         if (controller.isBookMode && verseItems.isNotEmpty) {
           return BookModeView(
+            tajweedEnabled: controller.isTajweedEnabled,
+            initialPage: controller.initialBookPage,
+            onPageChanged: controller.saveBookPage,
             title: isJuz
                 ? 'Juz ${controller.number}'
                 : (controller.surahDetail.namaLatin ?? 'Surah'),
@@ -189,6 +208,7 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
                             title: 'Ayat ${item.ayatNumber}',
                             subtitle: item.subtitle,
                             arabText: item.arabText,
+                            tajweedEnabled: controller.isTajweedEnabled,
                             latinText: item.latinText,
                             translationText: item.translationText,
                             isPlaying: controller.isVersePlaying(item.verseKey),
@@ -318,6 +338,128 @@ class _DetailSurahScreenState extends State<DetailSurahScreen> {
     } else {
       _itemScrollController.jumpTo(index: index, alignment: 0.15);
     }
+  }
+
+  void _showTajweedSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: ColorApp.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (sheetContext) {
+        return FractionallySizedBox(
+          heightFactor: 0.78,
+          child: Column(
+            children: [
+              Container(
+                width: 42.0,
+                height: 4.0,
+                margin: const EdgeInsets.only(top: 10.0, bottom: 14.0),
+                decoration: BoxDecoration(
+                  color: ColorApp.black.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(99.0),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.palette_rounded, color: ColorApp.primary),
+                    const SizedBox(width: 10.0),
+                    Expanded(
+                      child: Text(
+                        'Tajwid Berwarna',
+                        style: primary700.copyWith(fontSize: 19.0),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Tutup',
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              Obx(
+                () => SwitchListTile.adaptive(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  activeThumbColor: ColorApp.primary,
+                  title: Text(
+                    'Tampilkan warna tajwid',
+                    style: black600.copyWith(fontSize: 14.0),
+                  ),
+                  subtitle: Text(
+                    'Pengaturan ini tersimpan untuk pembacaan berikutnya.',
+                    style: black400.copyWith(fontSize: 11.5),
+                  ),
+                  value: controller.isTajweedEnabled,
+                  onChanged: controller.setTajweedEnabled,
+                ),
+              ),
+              const Divider(height: 1.0),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18.0, 14.0, 18.0, 6.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Legenda warna',
+                    style: black700.copyWith(fontSize: 14.0),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(10.0, 0, 10.0, 8.0),
+                  itemCount: TajweedRule.values.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 2.0),
+                  itemBuilder: (context, index) {
+                    final rule = TajweedRule.values[index];
+                    return ListTile(
+                      dense: true,
+                      leading: Container(
+                        width: 18.0,
+                        height: 18.0,
+                        decoration: BoxDecoration(
+                          color: rule.color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: ColorApp.black.withValues(alpha: 0.12),
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        rule.label,
+                        style: black600.copyWith(fontSize: 13.0),
+                      ),
+                      subtitle: Text(
+                        rule.description,
+                        style: black400.copyWith(fontSize: 11.5),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18.0, 6.0, 18.0, 14.0),
+                child: Text(
+                  'Warna adalah panduan berdasarkan huruf dan harakat. '
+                  'Pelajari pelafalan tajwid bersama guru untuk hasil terbaik.',
+                  textAlign: TextAlign.center,
+                  style: black400.copyWith(
+                    fontSize: 10.5,
+                    height: 1.35,
+                    color: ColorApp.black.withValues(alpha: 0.62),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _emptyState(String title, String subtitle) {
@@ -857,6 +999,7 @@ class _AyatCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.arabText,
+    required this.tajweedEnabled,
     required this.latinText,
     required this.translationText,
     required this.isPlaying,
@@ -867,6 +1010,7 @@ class _AyatCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String arabText;
+  final bool tajweedEnabled;
   final String latinText;
   final String translationText;
   final bool isPlaying;
@@ -964,11 +1108,10 @@ class _AyatCard extends StatelessWidget {
                   const SizedBox(height: 10.0),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: Text(
+                    child: TajweedText(
                       arabText,
+                      enabled: tajweedEnabled,
                       style: arabicQuran,
-                      textAlign: TextAlign.right,
-                      textDirection: TextDirection.rtl,
                     ),
                   ),
                   if (latinText.isNotEmpty) ...[

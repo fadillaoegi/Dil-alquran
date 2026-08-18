@@ -1,10 +1,40 @@
 import 'package:dilalquran/modules/data/sources/doa_source.dart';
 import 'package:dilalquran/modules/doa/model/doa_model.dart';
+import 'package:dilalquran/services/bookmark_store.dart';
 import 'package:get/get.dart';
 
 class DoaController extends GetxController {
   final DoaSource _doaSource = DoaSource();
   static const String allCategory = 'Semua';
+  static const String bookmarkPreferenceKey = 'dilalquran_doa_bookmarks';
+  final BookmarkStore _bookmarkStore =
+      const BookmarkStore(bookmarkPreferenceKey);
+
+  final RxSet<int> bookmarkedIds = <int>{}.obs;
+  final RxBool showBookmarkedOnly = false.obs;
+
+  int get bookmarkCount => bookmarkedIds.length;
+
+  bool isBookmarked(int? id) => id != null && bookmarkedIds.contains(id);
+
+  Future<void> toggleBookmark(int? id) async {
+    if (id == null) return;
+    if (bookmarkedIds.contains(id)) {
+      bookmarkedIds.remove(id);
+    } else {
+      bookmarkedIds.add(id);
+    }
+    bookmarkedIds.refresh();
+    _updateDisplayedData();
+    await _bookmarkStore.save(bookmarkedIds);
+  }
+
+  void setShowBookmarkedOnly(bool value) {
+    if (showBookmarkedOnly.value == value) return;
+    showBookmarkedOnly.value = value;
+    _itemsToDisplay.value = _perPage;
+    _updateDisplayedData();
+  }
 
   final RxList<DoaModel> _allDoaList = <DoaModel>[].obs;
   List<DoaModel> get allDoa => _allDoaList;
@@ -33,7 +63,16 @@ class DoaController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchDoa();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    final savedBookmarks = await _bookmarkStore.load();
+    bookmarkedIds
+      ..clear()
+      ..addAll(savedBookmarks);
+    bookmarkedIds.refresh();
+    await fetchDoa();
   }
 
   void selectCategory(String category) {
@@ -72,6 +111,7 @@ class DoaController extends GetxController {
   void loadMore() {
     final hasCategoryFilter = selectedCategory.value != allCategory;
     if (!hasCategoryFilter &&
+        !showBookmarkedOnly.value &&
         searchQuery.isEmpty &&
         _itemsToDisplay.value < _allDoaList.length) {
       isLoadMore.value = true;
@@ -89,6 +129,9 @@ class DoaController extends GetxController {
     final category = selectedCategory.value;
 
     final filteredList = _allDoaList.where((doa) {
+      final matchesBookmark = !showBookmarkedOnly.value || isBookmarked(doa.id);
+      if (!matchesBookmark) return false;
+
       final matchesCategory = category == allCategory ||
           (doa.grup ?? '').trim().toLowerCase() == category.toLowerCase();
       if (!matchesCategory) return false;
@@ -101,7 +144,8 @@ class DoaController extends GetxController {
           (doa.idn?.toLowerCase().contains(query) ?? false);
     }).toList();
 
-    final hasFilter = query.isNotEmpty || category != allCategory;
+    final hasFilter =
+        query.isNotEmpty || category != allCategory || showBookmarkedOnly.value;
     if (hasFilter) {
       displayedDoasList.assignAll(filteredList);
     } else {

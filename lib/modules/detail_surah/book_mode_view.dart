@@ -1,4 +1,5 @@
 import 'package:dilalquran/modules/detail_surah/page_flip_view.dart';
+import 'package:dilalquran/modules/detail_surah/tajweed.dart';
 import 'package:dilalquran/themes/colors.dart';
 import 'package:dilalquran/themes/fonts.dart';
 import 'package:flutter/material.dart';
@@ -43,12 +44,19 @@ class BookModeView extends StatefulWidget {
     super.key,
     required this.verses,
     required this.title,
+    this.tajweedEnabled = true,
+    this.initialPage = 0,
+    this.onPageChanged,
   });
 
   final List<MushafVerse> verses;
 
   /// Nama surah / "Juz N" untuk kepala halaman.
   final String title;
+
+  final bool tajweedEnabled;
+  final int initialPage;
+  final ValueChanged<int>? onPageChanged;
 
   @override
   State<BookModeView> createState() => _BookModeViewState();
@@ -63,6 +71,12 @@ class _BookModeViewState extends State<BookModeView> {
   // Cache hasil pemenggalan agar tidak dihitung ulang tiap frame.
   List<MushafPage> _pages = const [];
   String? _cacheKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPage = widget.initialPage < 0 ? 0 : widget.initialPage;
+  }
 
   void _changeFontSize(double delta) {
     final next = (_fontSize + delta).clamp(20.0, 38.0);
@@ -126,7 +140,10 @@ class _BookModeViewState extends State<BookModeView> {
                   controller: _flipController,
                   pageCount: pages.length,
                   initialPage: _currentPage,
-                  onPageChanged: (i) => setState(() => _currentPage = i),
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                    widget.onPageChanged?.call(index);
+                  },
                   builder: (context, index) {
                     return _MushafPageCard(
                       page: pages[index],
@@ -134,6 +151,7 @@ class _BookModeViewState extends State<BookModeView> {
                       pageNumber: index + 1,
                       totalPages: pages.length,
                       fontSize: _fontSize,
+                      tajweedEnabled: widget.tajweedEnabled,
                     );
                   },
                 );
@@ -171,9 +189,23 @@ class _BookModeViewState extends State<BookModeView> {
             onTap: _currentPage > 0 ? _flipController.previous : null,
           ),
           const SizedBox(width: 10.0),
-          Text(
-            total == 0 ? "-" : "${_currentPage + 1} / $total",
-            style: primary700.copyWith(fontSize: 13.0),
+          Tooltip(
+            message: "Progres halaman tersimpan otomatis",
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.bookmark_rounded,
+                  size: 15.0,
+                  color: ColorApp.primary,
+                ),
+                const SizedBox(width: 4.0),
+                Text(
+                  total == 0 ? "-" : "${_currentPage + 1} / $total",
+                  style: primary700.copyWith(fontSize: 13.0),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 10.0),
           _barButton(
@@ -243,6 +275,7 @@ class _MushafPageCard extends StatelessWidget {
     required this.pageNumber,
     required this.totalPages,
     required this.fontSize,
+    required this.tajweedEnabled,
   });
 
   final MushafPage page;
@@ -250,6 +283,7 @@ class _MushafPageCard extends StatelessWidget {
   final int pageNumber;
   final int totalPages;
   final double fontSize;
+  final bool tajweedEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +296,8 @@ class _MushafPageCard extends StatelessWidget {
           colors: [_paper, _paper, _paperEdge],
           stops: [0.0, 0.85, 1.0],
         ),
-        border: Border.all(color: _frameGold.withValues(alpha: 0.55), width: 2.0),
+        border:
+            Border.all(color: _frameGold.withValues(alpha: 0.55), width: 2.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.18),
@@ -294,10 +329,10 @@ class _MushafPageCard extends StatelessWidget {
             Expanded(
               child: Align(
                 alignment: Alignment.topCenter,
-                child: Text(
+                child: TajweedText(
                   page.text,
+                  enabled: tajweedEnabled,
                   textAlign: TextAlign.justify,
-                  textDirection: TextDirection.rtl,
                   style: _mushafTextStyle(fontSize),
                 ),
               ),
@@ -364,11 +399,7 @@ class _MushafPageCard extends StatelessWidget {
 /// Angka Arab-Indic (١٢٣) untuk penanda akhir ayat.
 String _arabicIndicDigits(int number) {
   const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-  return number
-      .toString()
-      .split('')
-      .map((c) => digits[int.parse(c)])
-      .join();
+  return number.toString().split('').map((c) => digits[int.parse(c)]).join();
 }
 
 /// Memenggal teks Arab yang mengalir menjadi halaman-halaman yang pas.

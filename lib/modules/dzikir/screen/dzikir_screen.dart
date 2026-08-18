@@ -75,8 +75,7 @@ class _DzikirScreenState extends State<DzikirScreen> {
         }
 
         if (controller.isError.value ||
-            (controller.displayedDzikirList.isEmpty &&
-                controller.searchQuery.isEmpty)) {
+            (controller.allDzikir.isEmpty && controller.searchQuery.isEmpty)) {
           return RefreshIndicator(
             color: ColorApp.primary,
             onRefresh: controller.fetchDzikir,
@@ -138,11 +137,14 @@ class _DzikirScreenState extends State<DzikirScreen> {
                 },
               ),
             ),
+            _buildBookmarkFilter(),
             if (dzikirList.isEmpty)
               Expanded(
                 child: Center(
                   child: Text(
-                    "Dzikir tidak ditemukan",
+                    controller.showBookmarkedOnly.value
+                        ? "Belum ada dzikir favorit"
+                        : "Dzikir tidak ditemukan",
                     textAlign: TextAlign.center,
                     style: primary400.copyWith(
                         fontSize: 16,
@@ -285,6 +287,26 @@ class _DzikirScreenState extends State<DzikirScreen> {
                                                 ],
                                               ),
                                             ),
+                                            IconButton(
+                                              tooltip: controller
+                                                      .isBookmarked(dzikir.id)
+                                                  ? 'Hapus dari favorit'
+                                                  : 'Simpan ke favorit',
+                                              onPressed: () => controller
+                                                  .toggleBookmark(dzikir.id),
+                                              icon: Icon(
+                                                controller
+                                                        .isBookmarked(dzikir.id)
+                                                    ? Icons.bookmark_rounded
+                                                    : Icons
+                                                        .bookmark_border_rounded,
+                                                color: controller
+                                                        .isBookmarked(dzikir.id)
+                                                    ? ColorApp.primary
+                                                    : ColorApp.primary
+                                                        .withValues(alpha: 0.6),
+                                              ),
+                                            ),
                                             Icon(
                                               Icons.arrow_forward_ios_rounded,
                                               size: 16.0,
@@ -311,6 +333,40 @@ class _DzikirScreenState extends State<DzikirScreen> {
           ],
         );
       }),
+    );
+  }
+
+  Widget _buildBookmarkFilter() {
+    final active = controller.showBookmarkedOnly.value;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 2.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: ChoiceChip(
+          selected: active,
+          showCheckmark: false,
+          selectedColor: ColorApp.primary,
+          backgroundColor: ColorApp.white,
+          side: BorderSide(
+            color: ColorApp.primary.withValues(alpha: active ? 1.0 : 0.28),
+            width: 1.4,
+          ),
+          avatar: Icon(
+            active ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+            size: 17.0,
+            color: active ? ColorApp.white : ColorApp.primary,
+          ),
+          label: Text(
+            "Favorit (${controller.bookmarkCount})",
+            style: TextStyle(
+              color: active ? ColorApp.white : ColorApp.primary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          onSelected: controller.setShowBookmarkedOnly,
+        ),
+      ),
     );
   }
 
@@ -478,6 +534,7 @@ class _DzikirDetailSheet extends StatefulWidget {
 }
 
 class _DzikirDetailSheetState extends State<_DzikirDetailSheet> {
+  final DzikirController controller = Get.find<DzikirController>();
   int _count = 0;
 
   int get _target => widget.dzikir.jumlah ?? 0;
@@ -550,6 +607,23 @@ class _DzikirDetailSheetState extends State<_DzikirDetailSheet> {
                               ),
                             ),
                           ),
+                          Obx(() {
+                            final bookmarked =
+                                controller.isBookmarked(dzikir.id);
+                            return IconButton(
+                              tooltip: bookmarked
+                                  ? 'Hapus dari favorit'
+                                  : 'Simpan ke favorit',
+                              onPressed: () =>
+                                  controller.toggleBookmark(dzikir.id),
+                              icon: Icon(
+                                bookmarked
+                                    ? Icons.bookmark_rounded
+                                    : Icons.bookmark_border_rounded,
+                                color: ColorApp.primary,
+                              ),
+                            );
+                          }),
                         ],
                       ),
                       const SizedBox(height: 20.0),
@@ -665,7 +739,9 @@ class _DzikirDetailSheetState extends State<_DzikirDetailSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 14.0),
                 alignment: Alignment.center,
                 child: Text(
-                  _isDone ? "Selesai — Alhamdulillah" : "Ketuk untuk menghitung",
+                  _isDone
+                      ? "Selesai — Alhamdulillah"
+                      : "Ketuk untuk menghitung",
                   style: white700.copyWith(fontSize: 15.0),
                 ),
               ),

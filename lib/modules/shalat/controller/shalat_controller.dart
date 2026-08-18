@@ -747,7 +747,8 @@ class ShalatController extends GetxController {
       soundType: mode,
       customSoundUri: customSoundUri.value,
     );
-    final testScheduled = await _notificationService.hasPendingNotification(998);
+    final testScheduled =
+        await _notificationService.hasPendingNotification(998);
     if (!testScheduled) {
       _snack(
         "Tes Gagal Dijadwalkan",
@@ -873,6 +874,10 @@ class ShalatController extends GetxController {
     switch (prayerNotificationModes[prayer]) {
       case notificationModeDevice:
         return "Suara ringtone sistem";
+      case notificationModeCustom:
+        return customSoundTitle.value.isNotEmpty
+            ? customSoundTitle.value
+            : "Pilih suara dari HP";
       case notificationModeSilent:
         return "Tanpa suara (notif saja)";
       case notificationModeOff:

@@ -7,6 +7,7 @@ import 'package:dilalquran/modules/data/models/surah_detail_model.dart';
 import 'package:dilalquran/modules/data/models/surah_model.dart';
 import 'package:dilalquran/modules/data/sources/home_source.dart';
 import 'package:dilalquran/modules/home/controller/home_controller.dart';
+import 'package:dilalquran/services/quran_reading_progress_store.dart';
 import 'package:dilalquran/widgets/app_notify.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +16,7 @@ class DetailSurahController extends GetxController {
   static const _prefQariKey = 'dilalquran_selected_qari';
   static const _prefLastReadKey = 'dilalquran_last_read_ayat';
   static const _prefBookModeKey = 'dilalquran_book_mode';
+  static const _prefTajweedEnabledKey = 'dilalquran_tajweed_enabled';
 
   final _surahDetail = SurahDetail().obs;
   SurahDetail get surahDetail => _surahDetail.value;
@@ -56,10 +58,36 @@ class DetailSurahController extends GetxController {
     await _prefs?.setBool(_prefBookModeKey, _isBookMode.value);
   }
 
+  // Warna tajwid aktif secara bawaan dan mengikuti preferensi pengguna.
+  final _isTajweedEnabled = true.obs;
+  bool get isTajweedEnabled => _isTajweedEnabled.value;
+  RxBool get isTajweedEnabledRx => _isTajweedEnabled;
+
+  Future<void> setTajweedEnabled(bool enabled) async {
+    _isTajweedEnabled.value = enabled;
+    await _prefs?.setBool(_prefTajweedEnabledKey, enabled);
+  }
+
   final AudioPlayer _audioPlayer = AudioPlayer();
   final AudioController audioCtrl = Get.find<AudioController>();
 
   SharedPreferences? _prefs;
+  final QuranReadingProgressStore _readingProgressStore =
+      const QuranReadingProgressStore();
+  final Map<String, int> _bookPageProgress = <String, int>{};
+
+  String get _bookProgressKey => QuranReadingProgressStore.contentKey(
+        category: _categoryToRaw(_category.value),
+        number: _number.value,
+      );
+
+  int get initialBookPage => _bookPageProgress[_bookProgressKey] ?? 0;
+
+  Future<void> saveBookPage(int pageIndex) async {
+    if (pageIndex < 0) return;
+    _bookPageProgress[_bookProgressKey] = pageIndex;
+    await _readingProgressStore.save(_bookPageProgress);
+  }
 
   final List<Map<String, String>> qariOptions = const [
     {'id': '01', 'name': 'Abdullah Al-Juhany'},
@@ -80,7 +108,9 @@ class DetailSurahController extends GetxController {
 
   void _listenPlaylistState() {
     audioCtrl.currentPlayKey.listen((key) {
-      if (audioCtrl.isPlaylistActive(_category.value == QuranCategory.juz ? 'juz' : 'surah', _number.value)) {
+      if (audioCtrl.isPlaylistActive(
+          _category.value == QuranCategory.juz ? 'juz' : 'surah',
+          _number.value)) {
         if (key.isNotEmpty) {
           _activeVerseKey.value = key;
         } else {
@@ -90,7 +120,9 @@ class DetailSurahController extends GetxController {
     });
 
     audioCtrl.isPlaying.listen((playing) {
-      if (audioCtrl.isPlaylistActive(_category.value == QuranCategory.juz ? 'juz' : 'surah', _number.value)) {
+      if (audioCtrl.isPlaylistActive(
+          _category.value == QuranCategory.juz ? 'juz' : 'surah',
+          _number.value)) {
         if (!playing && audioCtrl.currentPlayKey.value.isEmpty) {
           _activeVerseKey.value = '';
         }
@@ -103,7 +135,7 @@ class DetailSurahController extends GetxController {
     required List<String> keys,
   }) async {
     final type = _category.value == QuranCategory.juz ? 'juz' : 'surah';
-    
+
     // Jika playlist untuk surah/juz ini sudah aktif, toggle play/pause
     if (audioCtrl.isPlaylistActive(type, _number.value)) {
       await audioCtrl.togglePlay();
@@ -144,7 +176,8 @@ class DetailSurahController extends GetxController {
     final item = _lastRead.value;
     if (item == null) return false;
 
-    return item.category == _category.value && item.parentNumber == _number.value;
+    return item.category == _category.value &&
+        item.parentNumber == _number.value;
   }
 
   String get lastReadSummary {
@@ -182,7 +215,8 @@ class DetailSurahController extends GetxController {
       _number.value = payload.number;
 
       if (payload.category == QuranCategory.surah) {
-        _surahDetail.value = await HomeSource.fetchDetailSurah(payload.number.toString());
+        _surahDetail.value =
+            await HomeSource.fetchDetailSurah(payload.number.toString());
         _juzDetail.value = null;
       } else {
         final surahList = await _resolveSurahList();
@@ -283,7 +317,7 @@ class DetailSurahController extends GetxController {
     await _audioPlayer.stop();
     _activeVerseKey.value = '';
     _isPlaying.value = false;
-    
+
     // Hentikan juga playlist player jika aktif untuk surah/juz ini
     final type = _category.value == QuranCategory.juz ? 'juz' : 'surah';
     if (audioCtrl.isPlaylistActive(type, _number.value)) {
@@ -294,7 +328,7 @@ class DetailSurahController extends GetxController {
   Future<void> changeQari(String qariId) async {
     _selectedQari.value = qariId;
     await _prefs?.setString(_prefQariKey, qariId);
-    
+
     // Hentikan pemutaran playlist jika qari berganti
     final type = _category.value == QuranCategory.juz ? 'juz' : 'surah';
     if (audioCtrl.isPlaylistActive(type, _number.value)) {
@@ -303,11 +337,14 @@ class DetailSurahController extends GetxController {
   }
 
   bool isVersePlaying(String verseKey) {
-    final bool isSinglePlaying = _activeVerseKey.value == verseKey && _isPlaying.value;
-    final bool isPlaylistPlaying = _activeVerseKey.value == verseKey && 
-        audioCtrl.isPlaying.value && 
-        audioCtrl.isPlaylistActive(_category.value == QuranCategory.juz ? 'juz' : 'surah', _number.value);
-    
+    final bool isSinglePlaying =
+        _activeVerseKey.value == verseKey && _isPlaying.value;
+    final bool isPlaylistPlaying = _activeVerseKey.value == verseKey &&
+        audioCtrl.isPlaying.value &&
+        audioCtrl.isPlaylistActive(
+            _category.value == QuranCategory.juz ? 'juz' : 'surah',
+            _number.value);
+
     return isSinglePlaying || isPlaylistPlaying;
   }
 
@@ -318,7 +355,8 @@ class DetailSurahController extends GetxController {
       final parsedNumber = int.tryParse(numberRaw.toString()) ?? 1;
 
       return _DetailPayload(
-        category: categoryRaw == 'juz' ? QuranCategory.juz : QuranCategory.surah,
+        category:
+            categoryRaw == 'juz' ? QuranCategory.juz : QuranCategory.surah,
         number: parsedNumber,
       );
     }
@@ -353,6 +391,10 @@ class DetailSurahController extends GetxController {
     }
 
     _isBookMode.value = _prefs?.getBool(_prefBookModeKey) ?? false;
+    _isTajweedEnabled.value = _prefs?.getBool(_prefTajweedEnabledKey) ?? true;
+    _bookPageProgress
+      ..clear()
+      ..addAll(await _readingProgressStore.load());
 
     final savedLastRead = _prefs?.getString(_prefLastReadKey);
     if (savedLastRead != null && savedLastRead.isNotEmpty) {

@@ -75,8 +75,7 @@ class _DoaScreenState extends State<DoaScreen> {
         }
 
         if (controller.isError.value ||
-            (controller.displayedDoasList.isEmpty &&
-                controller.searchQuery.isEmpty)) {
+            (controller.allDoa.isEmpty && controller.searchQuery.isEmpty)) {
           return RefreshIndicator(
             color: ColorApp.primary,
             onRefresh: controller.fetchDoa,
@@ -160,7 +159,9 @@ class _DoaScreenState extends State<DoaScreen> {
               Expanded(
                 child: Center(
                   child: Text(
-                    "Doa tidak ditemukan",
+                    controller.showBookmarkedOnly.value
+                        ? "Belum ada doa favorit"
+                        : "Doa tidak ditemukan",
                     textAlign: TextAlign.center,
                     style: primary400.copyWith(
                       fontSize: 16,
@@ -301,6 +302,25 @@ class _DoaScreenState extends State<DoaScreen> {
                                                 ],
                                               ),
                                             ),
+                                            IconButton(
+                                              tooltip: controller
+                                                      .isBookmarked(doa.id)
+                                                  ? 'Hapus dari favorit'
+                                                  : 'Simpan ke favorit',
+                                              onPressed: () => controller
+                                                  .toggleBookmark(doa.id),
+                                              icon: Icon(
+                                                controller.isBookmarked(doa.id)
+                                                    ? Icons.bookmark_rounded
+                                                    : Icons
+                                                        .bookmark_border_rounded,
+                                                color: controller
+                                                        .isBookmarked(doa.id)
+                                                    ? ColorApp.primary
+                                                    : ColorApp.primary
+                                                        .withValues(alpha: 0.6),
+                                              ),
+                                            ),
                                             Icon(
                                               Icons.arrow_forward_ios_rounded,
                                               size: 16.0,
@@ -361,7 +381,7 @@ class _DoaScreenState extends State<DoaScreen> {
             Padding(
               padding: const EdgeInsets.only(left: 2.0, bottom: 10.0),
               child: Text(
-                "Kategori Doa",
+                "Kategori & Favorit",
                 style: primary600.copyWith(
                   fontSize: 12.5,
                   color: ColorApp.black.withValues(alpha: 0.7),
@@ -371,17 +391,30 @@ class _DoaScreenState extends State<DoaScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: categories.map((category) {
-                  final active = selected == category;
-                  return Padding(
+                children: [
+                  Padding(
                     padding: const EdgeInsets.only(right: 10.0, bottom: 6.0),
                     child: _ChunkyCategoryChip(
-                      label: category,
-                      active: active,
-                      onTap: () => controller.selectCategory(category),
+                      label: "Favorit (${controller.bookmarkCount})",
+                      active: controller.showBookmarkedOnly.value,
+                      icon: Icons.bookmark_rounded,
+                      onTap: () => controller.setShowBookmarkedOnly(
+                        !controller.showBookmarkedOnly.value,
+                      ),
                     ),
-                  );
-                }).toList(),
+                  ),
+                  ...categories.map((category) {
+                    final active = selected == category;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 10.0, bottom: 6.0),
+                      child: _ChunkyCategoryChip(
+                        label: category,
+                        active: active,
+                        onTap: () => controller.selectCategory(category),
+                      ),
+                    );
+                  }),
+                ],
               ),
             ),
           ],
@@ -398,11 +431,13 @@ class _ChunkyCategoryChip extends StatefulWidget {
     required this.label,
     required this.active,
     required this.onTap,
+    this.icon,
   });
 
   final String label;
   final bool active;
   final VoidCallback onTap;
+  final IconData? icon;
 
   @override
   State<_ChunkyCategoryChip> createState() => _ChunkyCategoryChipState();
@@ -451,13 +486,26 @@ class _ChunkyCategoryChipState extends State<_ChunkyCategoryChip> {
               ),
             ],
           ),
-          child: Text(
-            widget.label,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: active ? ColorApp.white : ColorApp.primary,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) ...[
+                Icon(
+                  widget.icon,
+                  size: 15.0,
+                  color: active ? ColorApp.white : ColorApp.primary,
+                ),
+                const SizedBox(width: 5.0),
+              ],
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: active ? ColorApp.white : ColorApp.primary,
+                ),
+              ),
+            ],
           ),
         ),
       ),
