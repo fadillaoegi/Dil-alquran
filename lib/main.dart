@@ -5,11 +5,22 @@ import 'package:dilalquran/services/notification_service.dart';
 import 'package:dilalquran/services/offline_store.dart';
 import 'package:dilalquran/services/startup_diagnostics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+
   final startupDiagnostics = StartupDiagnostics();
   final launchState = await startupDiagnostics.beginLaunch();
 
@@ -21,6 +32,8 @@ void main() async {
       androidNotificationChannelName: 'Audio Al-Quran',
       androidNotificationOngoing: true,
       androidNotificationIcon: 'mipmap/ic_launcher',
+      artDownscaleWidth: 256,
+      artDownscaleHeight: 256,
     ),
     diagnostics: startupDiagnostics,
   );
@@ -105,7 +118,8 @@ Future<void> _safeStartupTask(
     await task().timeout(timeout);
     await diagnostics?.logStep(label, details: 'Completed successfully.');
   } on TimeoutException {
-    await diagnostics?.markFailure(label, 'Timeout after ${timeout.inSeconds}s');
+    await diagnostics?.markFailure(
+        label, 'Timeout after ${timeout.inSeconds}s');
     debugPrint('[startup] $label timed out after ${timeout.inSeconds}s');
   } catch (e, stackTrace) {
     await diagnostics?.markFailure(label, e);

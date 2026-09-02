@@ -34,15 +34,15 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.fldev.dilalquran"
+    namespace = "com.fldev.dilalquran"
     // Target API 36 (Android 16) — memenuhi syarat target API level Google Play.
-    compileSdk 36
-    ndkVersion flutter.ndkVersion
+    compileSdk = 36
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
@@ -56,11 +56,11 @@ android {
     defaultConfig {
         applicationId "com.fldev.dilalquran"
 
-        minSdkVersion 24
-        targetSdkVersion 36
+        minSdk = 24
+        targetSdk = 36
 
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        versionCode = flutterVersionCode.toInteger()
+        versionName = flutterVersionName
     }
 
     signingConfigs {
@@ -78,9 +78,13 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            signingConfig = signingConfigs.release
 
-            // Flutter mengaktifkan R8 + resource shrinking pada build release.
+            // R8 + resource shrinking wajib eksplisit agar Play Console bisa
+            // melihat konfigurasi optimasi release.
+            minifyEnabled = true
+            shrinkResources = true
+
             // Tanpa aturan di bawah, R8 merusak model Gson milik
             // flutter_local_notifications sehingga notifikasi TERJADWAL gagal
             // senyap di rilis (lihat proguard-rules.pro).
@@ -91,9 +95,10 @@ android {
 }
 
 flutter {
-    source '../..'
+    source = '../..'
 }
 
 dependencies {
+    implementation 'androidx.core:core-ktx:1.17.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }

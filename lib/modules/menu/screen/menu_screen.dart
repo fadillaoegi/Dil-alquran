@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dilalquran/config/ai_config.dart';
 import 'package:dilalquran/routes/route.dart';
 import 'package:dilalquran/services/update_service.dart';
 import 'package:dilalquran/themes/colors.dart';
@@ -172,6 +173,29 @@ class _MenuScreenState extends State<MenuScreen>
                 },
               ),
             ),
+            // Kartu Scan Ayat hanya muncul bila layanan AI benar-benar
+            // tersedia pada build ini (AI_PROXY_URL atau GEMINI_API_KEY diisi
+            // lewat --dart-define). Tanpa itu fitur pasti gagal saat dibuka,
+            // jadi lebih baik tidak ditampilkan sama sekali daripada
+            // memunculkan menu mati di rilis Play Store.
+            if (AiConfig.isConfigured)
+              _FadeSlideIn(
+                animation: _interval(0.26, 0.71),
+                child: CardMenu(
+                  title: "Scan Ayat",
+                  subtitle: "Foto mushaf, langsung lihat artinya",
+                  infoLabel: "Butuh internet",
+                  icon: Icons.document_scanner_rounded,
+                  gradientColors: const [
+                    Color(0xff0b4a32),
+                    ColorApp.primary,
+                    Color(0xff7fd0a0),
+                  ],
+                  onTap: () {
+                    Get.toNamed(RouteScreen.scanAyat);
+                  },
+                ),
+              ),
             _FadeSlideIn(
               animation: _interval(0.32, 0.77),
               child: CardMenu(

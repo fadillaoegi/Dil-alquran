@@ -9,6 +9,8 @@ import 'package:dilalquran/modules/dzikir/controller/dzikir_controller.dart';
 import 'package:dilalquran/modules/dzikir/screen/dzikir_screen.dart';
 import 'package:dilalquran/modules/qibla/controller/qibla_controller.dart';
 import 'package:dilalquran/modules/qibla/screen/qibla_screen.dart';
+import 'package:dilalquran/modules/scan_ayat/controller/scan_ayat_controller.dart';
+import 'package:dilalquran/modules/scan_ayat/screen/scan_ayat_screen.dart';
 import 'package:dilalquran/modules/shalat/controller/shalat_controller.dart';
 import 'package:dilalquran/modules/tuntunan/screen/tuntunan_screen.dart';
 import 'package:dilalquran/modules/shalat/screen/shalat_notif_screen.dart';
@@ -121,6 +123,13 @@ List<GetPage<dynamic>>? getPages = [
   GetPage(
     name: RouteScreen.tuntunan,
     page: () => const TuntunanScreen(),
+  ),
+  GetPage(
+    name: RouteScreen.scanAyat,
+    page: () => const ScanAyatScreen(),
+    binding: BindingsBuilder(() {
+      Get.lazyPut<ScanAyatController>(() => ScanAyatController());
+    }),
   ),
   GetPage(
     name: RouteScreen.startupDebug,

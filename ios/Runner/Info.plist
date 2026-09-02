@@ -6,6 +6,10 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Aplikasi ini memerlukan akses lokasi untuk mendeteksi area Anda secara otomatis guna menampilkan jadwal shalat yang akurat.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Kamera dipakai untuk memfoto halaman Al-Qur'an pada fitur Scan Ayat agar ayat dapat dikenali.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Galeri dipakai untuk memilih foto halaman Al-Qur'an pada fitur Scan Ayat agar ayat dapat dikenali.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
